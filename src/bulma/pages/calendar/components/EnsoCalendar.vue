@@ -56,7 +56,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlus, faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 
 import 'vue-cal/dist/vuecal.css';
-import format from '@core-modules/plugins/date-fns/format';
+import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
 library.add(faPlus, faFlag, faArrowsAltH);
 

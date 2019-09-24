@@ -83,7 +83,7 @@ import {
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';
-import format from '@core-modules/plugins/date-fns/format';
+import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
 library.add(faUserClock, faPlus, faMinus);
 
