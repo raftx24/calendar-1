@@ -77,11 +77,11 @@
 
 <script>
 import { mapState } from 'vuex';
-import {
-    Modal, EnsoForm, FormField, EnsoDatepicker,
-} from '@enso-ui/bulma';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
+import { Modal } from '@enso-ui/modal';
+import { EnsoForm, FormField } from '@enso-ui/forms';
+import { EnsoDatepicker } from '@enso-ui/datepicker';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
@@ -117,8 +117,8 @@ export default {
 
     methods: {
         init() {
-            if (this.event.startDate && this.event.startTime) {this.$refs.form.field('starts_at').value = `${this.dateFormat(this.event.startDate)} ${this.event.startTime.trim()}`;}
-            if (this.event.endDate && this.event.endTime) {this.$refs.form.field('ends_at').value = `${this.dateFormat(this.event.endDate)} ${this.event.endTime.trim()}`;}
+            if (this.event.startDate && this.event.startTime) { this.$refs.form.field('starts_at').value = `${this.dateFormat(this.event.startDate)} ${this.event.startTime.trim()}`; }
+            if (this.event.endDate && this.event.endTime) { this.$refs.form.field('ends_at').value = `${this.dateFormat(this.event.endDate)} ${this.event.endTime.trim()}`; }
         },
         reminderFactory() {
             return {

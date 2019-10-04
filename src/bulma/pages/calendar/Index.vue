@@ -25,7 +25,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex';
-import { EnsoSelect } from '@enso-ui/bulma';
+import { EnsoSelect } from '@enso-ui/select/bulma';
 import EnsoCalendar from './components/EnsoCalendar.vue';
 import EventForm from './components/EventForm.vue';
 
