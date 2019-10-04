@@ -81,7 +81,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Modal } from '@enso-ui/modal';
 import { EnsoForm, FormField } from '@enso-ui/forms';
-import { EnsoDatepicker } from '@enso-ui/datepicker';
+import { EnsoDatepicker } from '@enso-ui/datepicker/bulma';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 

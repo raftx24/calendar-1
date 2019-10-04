@@ -84,13 +84,13 @@ export default {
             [event.endDate, event.endTime] = event.end.split(' ');
             this.$emit('add-event', event);
         },
-        dateFormat(daysCount,date) {
+        dateFormat(daysCount, date) {
             if (daysCount > 1) {
                 return format(date, 'm-d h:i');
             }
 
             return format(date, 'h:i');
-        }
+        },
     },
     computed: {
         ...mapState(['enums']),
