@@ -1,38 +1,46 @@
 <template>
     <div class="events-wrapper">
         <div class="columns">
-            <div class="column is-3-desktop is-8-tablet is-12-mobile">
-                <enso-select v-model="calendar"
-                    :options="enums.calendars._select()"
-                    placeholder="Calendar"
-                    @input="fetch"/>
+            <div class="column is-2-desktop is-8-tablet is-12-mobile">
+                <enso-calendar-filter
+                    @change-date="selectedDate = $event"
+                    @change-calendars="selectedCalendars = $event; fetch();"/>
+            </div>
+            <div class="column is-10-desktop is-12-tablet is-12-mobile">
+                <enso-calendar :events="events"
+                               :on-event-dblclick="selectEvent"
+                               :selected-date="selectedDate"
+                               @ready="updateInterval"
+                               @view-change="updateInterval"
+                               @event-duration-change="update"
+                               @event-delete="destroy"
+                               @add-event="event = $event || {}"/>
             </div>
         </div>
-        <enso-calendar :events="filteredEvents"
-            :on-event-dblclick="selectEvent"
-            @ready="updateInterval"
-            @view-change="updateInterval"
-            @event-duration-change="update"
-            @event-delete="destroy"
-            @add-event="event = $event || {}"/>
+
         <event-form :event="event"
-            @submit="submit"
-            @close="event = null"
-            @destroy="remove(event); event = null"
-            v-if="event"/>
+                    @submit="reloadEvents"
+                    @close="event = null"
+                    @destroy="reloadEvents"
+                    v-if="event"/>
     </div>
 </template>
 
 <script>
 import { mapState, mapMutations } from 'vuex';
-import { EnsoSelect } from '@enso-ui/select/bulma';
+import { EnsoSelect } from '@enso-ui/bulma';
+import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
+import VueCal from 'vue-cal';
 import EnsoCalendar from './components/EnsoCalendar.vue';
+import EnsoCalendarFilter from './components/EnsoCalendarFilter.vue';
 import EventForm from './components/EventForm.vue';
 
 export default {
     name: 'Index',
 
-    components: { EnsoCalendar, EventForm, EnsoSelect },
+    components: {
+        EnsoCalendar, EnsoCalendarFilter, EventForm, EnsoSelect, VueCal,
+    },
 
     inject: ['errorHandler', 'route'],
 
@@ -41,24 +49,33 @@ export default {
         event: null,
         events: [],
         interval: null,
+        test: null,
+        selectedDate: null,
+        selectedCalendars: null,
     }),
 
     computed: {
         ...mapState(['enums']),
+        ...mapState(['meta']),
         params() {
             if (!this.interval) {
-                return { calendar: this.calendar };
+                return { calendars: this.selectedCalendars };
             }
 
-            return this.interval.view === 'month'
-                ? { calendar: this.calendar, startDate: this.interval.firstCellDate, endDate: this.interval.lastCellDate }
-                : { calendar: this.calendar, startDate: this.interval.startDate, endDate: this.interval.endDate };
-        },
-        filteredEvents() {
-            return this.events.filter(event => this.calendar === event.calendar);
+            if (this.interval.view === 'month') {
+                return {
+                    calendars: this.selectedCalendars,
+                    startDate: `${this.dateFormat(this.interval.firstCellDate)} 00:00:00`,
+                    endDate: `${this.dateFormat(this.interval.lastCellDate)} 23:59:59`,
+                };
+            }
+            return {
+                calendars: this.selectedCalendars,
+                startDate: `${this.dateFormat(this.interval.startDate)} 00:00`,
+                endDate: `${this.dateFormat(this.interval.endDate)} 23:59:59`,
+            };
         },
     },
-
     created() {
         this.hideFooter();
     },
@@ -83,47 +100,46 @@ export default {
                 .catch(this.errorHandler);
         },
         selectEvent(event, e) {
+            if (event.route) {
+                this.$router.push(event.route);
+                return;
+            }
+
             if (!event.readonly) {
                 this.event = event;
             }
             e.stopPropagation();
         },
-        submit({ event }) {
-            if (this.event.id) {
-                const index = this.events.findIndex(({ id }) => id === event.id);
-                this.events.splice(index, 1, event);
-            } else {
-                this.events.push(event);
-            }
-
-            this.event = null;
-        },
         update($event) {
             axios.patch(
                 this.route('core.calendar.events.update', { event: $event.id }),
-                { starts_at: $event.start, ends_at: $event.end },
-            ).catch(this.errorHandler);
+                { ends_time_at: `${this.timeFormat($event.end)}` },
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.reloadEvents();
+            }).catch(this.errorHandler);
         },
         destroy($event) {
-            if ($event.readonly) {
-                return;
-            }
-
             axios.delete(
                 this.route('core.calendar.events.destroy', { event: $event.id }),
-            ).then(() => (this.remove($event)))
-                .catch(this.errorHandler);
-        },
-        remove(event) {
-            const index = this.events.findIndex(({ id }) => id === event.id);
-            this.events.splice(index, 1);
+            ).then(() => (this.fetch())).catch(this.errorHandler);
         },
         updateInterval(interval) {
             this.interval = interval;
             this.fetch();
         },
+        reloadEvents() {
+            this.fetch();
+            this.event = null;
+        },
         resize() {
             this.$el.style.height = `${document.body.clientHeight - 270}px`;
+        },
+        dateFormat(date) {
+            return format(date, `${this.meta.dateFormat}`);
+        },
+        timeFormat(dateTime) {
+            return format(dateTime, 'H:i');
         },
     },
 };

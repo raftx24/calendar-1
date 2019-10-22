@@ -29,8 +29,8 @@
                     <div class="columns">
                         <div class="column is-3">
                             <fade>
-                                <a class="button is-small is-naked has-margin-top-medium is-pulled-right"
-                                    @click="field.value.push(reminderFactory())"
+                                <a @click="field.value.push(reminderFactory())"
+                                    class="button is-small is-naked has-margin-top-medium is-pulled-right"
                                     v-if="
                                         field.value.length < 3
                                         && !field.value.some(({ remind_at }) => !remind_at)
@@ -77,11 +77,11 @@
 
 <script>
 import { mapState } from 'vuex';
+import {
+    Modal, EnsoForm, FormField, EnsoDatepicker,
+} from '@enso-ui/bulma';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
-import { Modal } from '@enso-ui/modal/bulma';
-import { EnsoForm, FormField } from '@enso-ui/forms/bulma';
-import { EnsoDatepicker } from '@enso-ui/datepicker/bulma';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
@@ -117,8 +117,14 @@ export default {
 
     methods: {
         init() {
-            if (this.event.startDate && this.event.startTime) { this.$refs.form.field('starts_at').value = `${this.dateFormat(this.event.startDate)} ${this.event.startTime.trim()}`; }
-            if (this.event.endDate && this.event.endTime) { this.$refs.form.field('ends_at').value = `${this.dateFormat(this.event.endDate)} ${this.event.endTime.trim()}`; }
+            if (this.event.startDate && this.event.startTime) {
+                const startsAt = `${this.dateFormat(this.event.startDate)} ${this.event.startTime.trim()}`;
+                this.$refs.form.field('starts_at').value = startsAt;
+            }
+            if (this.event.endDate && this.event.endTime) {
+                const endsAt = `${this.dateFormat(this.event.endDate)} ${this.event.endTime.trim()}`;
+                this.$refs.form.field('ends_at').value = endsAt;
+            }
         },
         reminderFactory() {
             return {

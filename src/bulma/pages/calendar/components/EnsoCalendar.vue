@@ -3,6 +3,7 @@
         <vue-cal class="vuecal--green-theme"
             :time-from="7 * 60"
             :locale="lang"
+            :selected-date="selectedDate"
             :events="events"
             show-all-day-events
             events-count-on-year-view
@@ -55,7 +56,8 @@ import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faPlus, faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
-import 'vue-cal/dist/vuecal.css';
+
+import('../styles/colors.scss');
 
 library.add(faPlus, faFlag, faArrowsAltH);
 
@@ -71,35 +73,43 @@ export default {
             type: Array,
             required: true,
         },
+        selectedDate: {
+            required: true,
+        },
     },
 
     data: () => ({
         event: null,
         hovering: null,
     }),
-
+    computed: {
+        ...mapState(['enums']),
+        ...mapGetters('preferences', ['lang']),
+    },
     methods: {
-        addEvent(event, deleteFunction) {
+        addEvent(event) {
             [event.startDate, event.startTime] = event.start.split(' ');
             [event.endDate, event.endTime] = event.end.split(' ');
             this.$emit('add-event', event);
         },
         dateFormat(daysCount, date) {
-            if (daysCount > 1) {
-                return format(date, 'm-d h:i');
-            }
-
-            return format(date, 'h:i');
+            return daysCount > 1
+                ? format(date, 'm-d h:i')
+                : format(date, 'h:i');
         },
-    },
-    computed: {
-        ...mapState(['enums']),
-        ...mapGetters('preferences', ['lang']),
     },
 };
 </script>
 
 <style lang="scss">
+    .vuecal__cell-content {align-self: flex-start;}
+    .vuecal__cell-date {text-align: right;padding: 4px;}
+
+    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.love,
+    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.love {right: 50%;}
+    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.leisure,
+    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.leisure {left: 50%;}
+
     .calendar-wrapper {
         .vuecal {
             border-radius: inherit;
@@ -107,46 +117,13 @@ export default {
             .vuecal__cell:hover {
                 cursor: pointer;
             }
-
-            .vuecal__all-day {
-                max-height: 4em;
-            }
         }
-
         .vuecal__event {
             .event-body {
                 white-space: pre;
             }
-
-            &.is-info {
-                background-color: rgba(100,200,255,.8);
-                border: 1px solid #50b4eb;
-                color: #fff;
-            }
-
-            &.is-danger {
-                background-color: rgba(231,76,60,.8);
-                border: 1px solid #e74c3c;
-                color: #fff;
-            }
-
-            &.is-warning {
-                background-color: rgba(225,221,87,.8);
-                border: 1px solid #ffdd57;
-                color: #4a4a4a;
-            }
-
-            &.is-success {
-                background-color: rgba(35,209,96,.8);
-                border: 1px solid #23d160;
-                color: #fff;
-            }
-
-            &.is-primary {
-                background-color: rgba(164,230,210,.9);
-                border: 1px solid #90d2be;
-            }
         }
+
 
         .vuecal__event-resize-handle {
                 &:after {
