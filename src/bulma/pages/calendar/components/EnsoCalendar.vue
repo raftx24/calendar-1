@@ -19,8 +19,6 @@
             :on-event-dblclick="selectEvent"
             :on-event-create="addEvent"
             editable-events
-            :multiple-day-events="false"
-            resize-x
             v-on="$listeners">
             <template v-slot:today-button>
                 <a class="button is-primary is-small is-rounded has-margin-left-large">
