@@ -8,8 +8,13 @@
             show-all-day-events
             events-count-on-year-view
             v-bind="$attrs"
+            @ready="updateInterval"
+            @view-change="updateInterval"
             @event-mouse-enter="hovering = $event.id"
             @event-mouse-leave="hovering = null"
+            @event-delete="destroy"
+            @event-duration-change="update"
+            :on-event-dblclick="selectEvent"
             :on-event-create="addEvent"
             editable-events
             resize-x
@@ -18,7 +23,7 @@
                 <div>
                     {{ title }}
                     <a class="button is-primary is-small is-rounded has-margin-left-large"
-                        @click.stop="$emit('add-event')">
+                        @click.stop="$emit('edit-event')">
                         <span class="is-bold">
                             {{ i18n('Add Event') }}
                         </span>
@@ -39,9 +44,9 @@
                     <div v-if="!event.allDay">
                         <p class="has-text-centered"
                             v-if="hovering === event.id">
-                                {{ dateFormat(event.daysCount,event.start) }}
+                                {{ dateTimeFormat(event.daysCount,event.start) }}
                                 <fa icon="arrows-alt-h"/>
-                                {{ dateFormat(event.daysCount,event.end) }}
+                                {{ dateTimeFormat(event.daysCount,event.end) }}
                         </p>
                     </div>
                 </div>
@@ -66,36 +71,101 @@ export default {
 
     components: { VueCal },
 
-    inject: ['i18n'],
+    inject: ['errorHandler', 'route', 'i18n'],
 
     props: {
-        events: {
-            type: Array,
-            required: true,
-        },
         selectedDate: {
             required: true,
         },
+        calendars: {
+            required: true,
+        },
     },
-
-    data: () => ({
-        event: null,
-        hovering: null,
-    }),
     computed: {
-        ...mapState(['enums']),
+        ...mapState(['meta']),
         ...mapGetters('preferences', ['lang']),
+        params() {
+            if (!this.interval) {
+                return { calendars: this.calendars };
+            }
+
+            if (this.interval.view === 'month') {
+                return {
+                    calendars: this.calendars,
+                    startDate: `${this.dateFormat(this.interval.firstCellDate)} 00:00:00`,
+                    endDate: `${this.dateFormat(this.interval.lastCellDate)} 23:59:59`,
+                };
+            }
+            return {
+                calendars: this.calendars,
+                startDate: `${this.dateFormat(this.interval.startDate)} 00:00:00`,
+                endDate: `${this.dateFormat(this.interval.endDate)} 23:59:59`,
+            };
+        },
     },
+    watch: {
+        calendars() {
+            this.fetch();
+        },
+    },
+    data: () => ({
+        events: [],
+        hovering: null,
+        interval: null,
+    }),
     methods: {
+        fetch() {
+            if (this.calendars) {
+                axios.get(this.route('core.calendar.events.index'), { params: this.params })
+                    .then(({ data }) => (this.events = data))
+                    .catch(this.errorHandler);
+            }
+        },
         addEvent(event) {
             [event.startDate, event.startTime] = event.start.split(' ');
             [event.endDate, event.endTime] = event.end.split(' ');
-            this.$emit('add-event', event);
+            this.$emit('edit-event', event);
         },
-        dateFormat(daysCount, date) {
+        update($event) {
+            axios.patch(
+                this.route('core.calendar.events.update', { event: $event.id }),
+                { ends_time_at: this.timeFormat($event.end) },
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.fetch();
+            }).catch(this.errorHandler);
+        },
+        updateInterval(interval) {
+            this.interval = interval;
+            this.fetch();
+        },
+        selectEvent(event, e) {
+            if (event.route) {
+                this.$router.push(event.route);
+                return;
+            }
+
+            if (!event.readonly) {
+                this.$emit('edit-event', event);
+            }
+
+            e.stopPropagation();
+        },
+        destroy($event) {
+            axios.delete(
+                this.route('core.calendar.events.destroy', { event: $event.id }),
+            ).then(() => (this.fetch())).catch(this.errorHandler);
+        },
+        dateTimeFormat(daysCount, date) {
             return daysCount > 1
                 ? format(date, 'm-d h:i')
                 : format(date, 'h:i');
+        },
+        dateFormat(date) {
+            return format(date, `${this.meta.dateFormat}`);
+        },
+        timeFormat(dateTime) {
+            return format(dateTime, 'H:i');
         },
     },
 };
