@@ -6,6 +6,8 @@
             :selected-date="selectedDate"
             :events="events"
             show-all-day-events
+            today-button
+            watch-real-time
             events-count-on-year-view
             v-bind="$attrs"
             @ready="updateInterval"
@@ -17,8 +19,16 @@
             :on-event-dblclick="selectEvent"
             :on-event-create="addEvent"
             editable-events
+            :multiple-day-events="false"
             resize-x
             v-on="$listeners">
+            <template v-slot:today-button>
+                <a class="button is-primary is-small is-rounded has-margin-left-large">
+                        <span class="is-bold">
+                            {{ i18n('Today') }}
+                        </span>
+                </a>
+            </template>
             <template v-slot:title="{ title, view }">
                 <div>
                     {{ title }}
