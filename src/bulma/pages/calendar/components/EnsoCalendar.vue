@@ -21,25 +21,15 @@
             editable-events
             v-on="$listeners">
             <template v-slot:today-button>
-                <a class="button is-primary is-small is-rounded has-margin-left-large">
-                        <span class="is-bold">
-                            {{ i18n('Today') }}
-                        </span>
+                <a class="button is-primary is-small">
+                    <span class="is-bold">
+                        {{ i18n('Today') }}
+                    </span>
+                    <span class="icon is-small">
+                        <fa icon="crosshairs"
+                            size="xs"/>
+                    </span>
                 </a>
-            </template>
-            <template v-slot:title="{ title, view }">
-                <div>
-                    {{ title }}
-                    <a class="button is-primary is-small is-rounded has-margin-left-large"
-                        @click.stop="$emit('edit-event')">
-                        <span class="is-bold">
-                            {{ i18n('Add Event') }}
-                        </span>
-                        <span class="icon is-small">
-                            <fa icon="plus"/>
-                        </span>
-                    </a>
-                </div>
             </template>
             <template v-slot:event-renderer="{ event, view }">
                 <div>
@@ -67,12 +57,12 @@
 import { mapState, mapGetters } from 'vuex';
 import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlus, faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
+import { faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
 import('../styles/colors.scss');
 
-library.add(faPlus, faFlag, faArrowsAltH);
+library.add(faFlag, faArrowsAltH);
 
 export default {
     name: 'EnsoCalendar',

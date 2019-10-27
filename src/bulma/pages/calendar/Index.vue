@@ -2,45 +2,41 @@
     <div class="events-wrapper">
         <div class="columns">
             <div class="column is-2-desktop is-8-tablet is-12-mobile">
-                <enso-calendar-filter
-                    @change-date="selectedDate = $event"
-                    @change-calendars="calendars = $event;"/>
+                <calendar-filter @change-date="selectedDate = $event"
+                    @update-selection="calendars = $event;"/>
             </div>
             <div class="column is-10-desktop is-12-tablet is-12-mobile">
                 <enso-calendar :selected-date="selectedDate"
-                               :calendars="calendars"
-                               ref="calendar"
-                               @edit-event="event = $event || {}"/>
+                    :calendars="calendars"
+                    ref="calendar"
+                    @edit-event="event = $event || {}"/>
             </div>
         </div>
-
         <event-form :event="event"
-                    @submit="reloadEvents"
-                    @close="event = null"
-                    @destroy="reloadEvents"
-                    v-if="event"/>
+            @submit="reloadEvents"
+            @close="event = null"
+            @destroy="reloadEvents"
+            v-if="event"/>
     </div>
 </template>
 
 <script>
 import { mapMutations } from 'vuex';
 import EnsoCalendar from './components/EnsoCalendar.vue';
-import EnsoCalendarFilter from './components/EnsoCalendarFilter.vue';
+import CalendarFilter from './components/CalendarFilter.vue';
 import EventForm from './components/EventForm.vue';
 
 export default {
     name: 'Index',
 
-    components: {
-        EnsoCalendar, EnsoCalendarFilter, EventForm
-    },
+    components: { EnsoCalendar, CalendarFilter, EventForm },
 
     inject: ['errorHandler', 'route'],
 
     data: () => ({
         event: null,
         selectedDate: null,
-        calendars: null,
+        calendars: [],
     }),
 
     created() {

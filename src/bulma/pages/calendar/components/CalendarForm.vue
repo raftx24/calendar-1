@@ -13,11 +13,11 @@
                         {{ i18n(field.label) }}
                     </label>
                     <vue-select v-model="field.value"
-                                v-bind="field.meta"
-                                v-on="$listeners"
-                                @fetch="field.meta.options = $event"
-                                :has-error="errors.has(field.name)"
-                                @input="errors.clear(field.name); $emit('changed')">
+                        v-bind="field.meta"
+                        v-on="$listeners"
+                        @fetch="field.meta.options = $event"
+                        :has-error="errors.has(field.name)"
+                        @input="errors.clear(field.name); $emit('changed')">
                         <template v-slot:selection="{selection,errors}">
                             <div>
                                 <span :class="'calendar-color calendar-'+selection.name"/>
@@ -83,5 +83,6 @@ export default {
     }
     .modal.calendar-modal .modal-content {
         overflow: visible;
+        width: 400px;
     }
 </style>
