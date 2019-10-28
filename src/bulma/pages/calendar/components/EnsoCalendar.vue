@@ -50,6 +50,10 @@
                 </div>
             </template>
         </vue-cal>
+
+        <event-confirmation v-if="confirm"
+                            @confirm="confirm($event); confirm=null"
+                            @cancel="fetch(); confirm=null"/>
     </div>
 </template>
 
@@ -59,6 +63,7 @@ import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
+import EventConfirmation from './EventConfirmation';
 
 import('../styles/colors.scss');
 
@@ -67,7 +72,7 @@ library.add(faFlag, faArrowsAltH);
 export default {
     name: 'EnsoCalendar',
 
-    components: { VueCal },
+    components: { VueCal, EventConfirmation },
 
     inject: ['errorHandler', 'route', 'i18n'],
 
@@ -108,6 +113,8 @@ export default {
     },
     data: () => ({
         events: [],
+        event: null,
+        confirm: null,
         hovering: null,
         interval: null,
     }),
@@ -125,13 +132,15 @@ export default {
             this.$emit('edit-event', event);
         },
         update($event) {
-            axios.patch(
-                this.route('core.calendar.events.update', { event: $event.id }),
-                { ends_time_at: this.timeFormat($event.end) },
-            ).then(({ data }) => {
-                this.$toastr.success(data.message);
-                this.fetch();
-            }).catch(this.errorHandler);
+            this.confirm = (updateType) => {
+                axios.patch(
+                    this.route('core.calendar.events.update', { event: $event.id }),
+                    { ends_time_at: this.timeFormat($event.end), update_type: updateType },
+                ).then(({ data }) => {
+                    this.$toastr.success(data.message);
+                    this.fetch();
+                }).catch(this.errorHandler);
+            };
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -150,9 +159,12 @@ export default {
             e.stopPropagation();
         },
         destroy($event) {
-            axios.delete(
-                this.route('core.calendar.events.destroy', { event: $event.id }),
-            ).then(() => (this.fetch())).catch(this.errorHandler);
+            this.confirm = (updateType) => {
+                console.log('type\t', updateType);
+                axios.delete(
+                    this.route('core.calendar.events.destroy', { event: $event.id, updateType })
+                ).then(() => (this.fetch())).catch(this.errorHandler);
+            };
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1

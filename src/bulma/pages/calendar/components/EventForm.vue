@@ -20,8 +20,11 @@
                     @input="$refs.form.field('starts_at').meta.max = $event;"/>
             </template>
             <template v-slot:frequence="props">
+                <form-field v-bind="props" @input="changeFrequence($event)"/>
+            </template>
+            <template v-slot:update_type="props">
                 <form-field v-bind="props"
-                    @input="$refs.form.field('recurrence_ends_at').meta.hidden = $event === 1"/>
+                    @input="$refs.form.field('update_type').meta.hidden = $event === 1"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -72,6 +75,10 @@
                 </div>
             </template>
         </enso-form>
+        <event-confirmation v-if="confirm"
+                            @confirm="confirm($event); confirm=null"
+                            @cancel="confirm=null">
+        </event-confirmation>
     </modal>
 </template>
 
@@ -83,6 +90,7 @@ import {
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';
+import EventConfirmation from './EventConfirmation';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 
 library.add(faUserClock, faPlus, faMinus);
@@ -91,7 +99,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade,
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation
     },
 
     inject: ['i18n', 'route'],
@@ -102,11 +110,16 @@ export default {
             required: true,
         },
     },
-
+    data: () => ({
+        confirm: null,
+    }),
     computed: {
         ...mapState(['meta']),
+        isEdit() {
+            return this.event.id;
+        },
         path() {
-            return this.event.id
+            return this.isEdit
                 ? this.route('core.calendar.events.edit', { event: this.event.id })
                 : this.route('core.calendar.events.create');
         },
@@ -139,6 +152,11 @@ export default {
         },
         dateFormat(date) {
             return format(date, this.meta.dateFormat);
+        },
+        changeFrequence(frequence) {
+            console.log('this.isEdit\t', this.isEdit);
+            this.$refs.form.field('recurrence_ends_at').meta.hidden = frequence === 1;
+            this.$refs.form.field('update_type').meta.hidden = !this.isEdit || frequence === 1;
         },
     },
 };
