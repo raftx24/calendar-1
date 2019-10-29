@@ -66,7 +66,7 @@ export default {
 
     },
     data: () => ({
-        type: null,
+        type: 'single',
     }),
     computed: {
     },

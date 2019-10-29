@@ -131,15 +131,19 @@ export default {
             [event.endDate, event.endTime] = event.end.split(' ');
             this.$emit('edit-event', event);
         },
-        update($event) {
-            this.confirm = (updateType) => {
+        update($event, updateType) {
+            if ($event.frequence === 1 || updateType !== undefined) {
                 axios.patch(
                     this.route('core.calendar.events.update', { event: $event.id }),
-                    { ends_time_at: this.timeFormat($event.end), update_type: updateType },
+                    { ends_time: this.timeFormat($event.end), update_type: updateType },
                 ).then(({ data }) => {
                     this.$toastr.success(data.message);
                     this.fetch();
                 }).catch(this.errorHandler);
+                return;
+            }
+            this.confirm = (updateType) => {
+                this.update($event, updateType);
             };
         },
         updateInterval(interval) {
@@ -158,12 +162,19 @@ export default {
 
             e.stopPropagation();
         },
-        destroy($event) {
-            this.confirm = (updateType) => {
-                console.log('type\t', updateType);
+        destroy($event, updateType) {
+            if ($event.frequence === 1 || updateType !== undefined) {
                 axios.delete(
-                    this.route('core.calendar.events.destroy', { event: $event.id, updateType })
+                    this.route(
+                        'core.calendar.events.destroy',
+                        { event: $event.id, updateType: updateType || 'single' },
+                    ),
                 ).then(() => (this.fetch())).catch(this.errorHandler);
+                return;
+            }
+
+            this.confirm = (updateType) => {
+                this.destroy($event, updateType);
             };
         },
         dateTimeFormat(daysCount, date) {
