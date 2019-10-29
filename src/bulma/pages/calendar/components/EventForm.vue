@@ -8,16 +8,16 @@
             ref="form"
             disable-state
             @ready="init">
-            <template v-slot:starts_on="props">
+            <template v-slot:starts_date="props">
                 <form-field v-bind="props"
                     @input="
-                        $refs.form.field('ends_on').meta.min = $event;
+                        $refs.form.field('ends_date').meta.min = $event;
                         $refs.form.field('recurrence_ends_at').meta.min = $event;
                     "/>
             </template>
-            <template v-slot:ends_on="props">
+            <template v-slot:ends_date="props">
                 <form-field v-bind="props"
-                    @input="$refs.form.field('starts_on').meta.max = $event;"/>
+                    @input="$refs.form.field('starts_date').meta.max = $event;"/>
             </template>
             <template v-slot:frequence="props">
                 <form-field v-bind="props" @input="changeFrequence($event)"/>
@@ -133,9 +133,9 @@ export default {
 
     methods: {
         init() {
-            this.$refs.form.field('starts_on').value = this.dateFormat(this.event.startDate);
+            this.$refs.form.field('starts_date').value = this.dateFormat(this.event.startDate);
             this.$refs.form.field('starts_time').value = this.event.startTime.trim();
-            this.$refs.form.field('ends_on').value = this.dateFormat(this.event.endDate);
+            this.$refs.form.field('ends_date').value = this.dateFormat(this.event.endDate);
             this.$refs.form.field('ends_time').value = this.event.endTime.trim();
         },
         reminderFactory() {

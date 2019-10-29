@@ -35,12 +35,11 @@
                 </div>
             </div>
         </div>
-        <div class="level is-marginless"
-            v-for="calendar in calendars">
+        <div class="level is-marginless" v-for="calendar in calendars" :key="calendar.id">
             <div class="level-left">
                 <div class="level-item">
                     <input :class="['is-checkradio', `calendar-${calendar.color}`]"
-                        v-model="selectedCalendars"
+                        v-model="selected"
                         type="checkbox"
                         :id="`checkbox-${calendar.id}`"
                         :key="`checkbox-${calendar.id}`"
@@ -76,7 +75,9 @@
 <script>
 import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlus, faFlag, faArrowsAltH, faCrosshairs } from '@fortawesome/free-solid-svg-icons';
+import {
+    faPlus, faFlag, faArrowsAltH, faCrosshairs,
+} from '@fortawesome/free-solid-svg-icons';
 import 'vue-cal/dist/vuecal.css';
 import CalendarForm from './CalendarForm.vue';
 
@@ -89,12 +90,12 @@ export default {
 
     components: { CalendarForm, VueCal },
 
-    inject: ['i18n', 'route'],
+    inject: ['errorHandler', 'i18n', 'route'],
 
     data: () => ({
         calendars: [],
         calendar: null,
-        selectedCalendars: [],
+        selected: [],
     }),
 
     created() {
@@ -109,11 +110,10 @@ export default {
                 }).catch(this.errorHandler);
         },
         updateSelection() {
-            this.$emit('update-selection', this.selectedCalendars);
+            this.$emit('update-selection', this.selected);
         },
         selectAll() {
-            this.selectedCalendars = this.calendars.map(({ id }) => id, []);
-
+            this.selected = this.calendars.map(({ id }) => id);
             this.updateSelection();
         },
         setCalendar(calendar) {
@@ -122,7 +122,7 @@ export default {
         updateCalendar({ calendar }) {
             this.fetch().then(() => {
                 if (!this.calendar.id) {
-                    this.selectedCalendars.push(calendar.id);
+                    this.selected.push(calendar.id);
                 }
 
                 this.calendar = null;
@@ -131,10 +131,10 @@ export default {
         },
         destroy() {
             this.fetch().then(() => {
-                const index = this.selectedCalendars
+                const index = this.selected
                     .findIndex(id => id === this.calendar.id);
 
-                this.selectedCalendars.splice(index, 1);
+                this.selected.splice(index, 1);
                 this.calendar = null;
                 this.updateSelection();
             });
