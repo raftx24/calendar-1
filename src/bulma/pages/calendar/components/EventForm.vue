@@ -74,11 +74,13 @@
                     </div>
                 </div>
             </template>
+            <template v-slot:calendar_id="{field,errors}">
+                <color-select :field="field" :errors="errors"/>
+            </template>
         </enso-form>
         <event-confirmation v-if="confirm"
                             @confirm="confirm($event); confirm=null"
-                            @cancel="confirm=null">
-        </event-confirmation>
+                            @cancel="confirm=null"/>
     </modal>
 </template>
 
@@ -90,8 +92,9 @@ import {
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';
-import EventConfirmation from './EventConfirmation';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
+import EventConfirmation from './EventConfirmation.vue';
+import ColorSelect from './ColorSelect.vue';
 
 library.add(faUserClock, faPlus, faMinus);
 
@@ -99,7 +102,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation, ColorSelect,
     },
 
     inject: ['i18n', 'route'],
