@@ -1,5 +1,10 @@
 <template>
     <div class="wrapper">
+        <calendar-form :calendar="calendar"
+            @submit="updateCalendar"
+            @close="calendar = null"
+            @destroy="destroy"
+            v-if="calendar"/>
         <vue-cal class="small-calendar vuecal--green-theme has-margin-bottom-large"
             xsmall
             today-button
@@ -64,11 +69,6 @@
                 </div>
             </div>
         </div>
-        <calendar-form :calendar="calendar"
-            @submit="updateCalendar"
-            @close="calendar = null"
-            @destroy="destroy"
-            v-if="calendar"/>
     </div>
 </template>
 
