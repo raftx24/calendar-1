@@ -36,7 +36,7 @@
                                     class="button is-small is-naked has-margin-top-medium is-pulled-right"
                                     v-if="
                                         field.value.length < 3
-                                        && !field.value.some(({ remind_at }) => !remind_at)
+                                        && !field.value.some(({ scheduled_at }) => !scheduled_at)
                                     ">
                                     <span class="icon is-small">
                                         <fa icon="plus"/>
@@ -53,7 +53,7 @@
                                 :key="index">
                                 <div class="column is-9 animated fadeIn">
                                     <p class="has-margin-bottom-small">
-                                        <enso-datepicker v-model="reminder.remind_at"
+                                        <enso-datepicker v-model="reminder.scheduled_at"
                                             v-bind="field.meta"/>
                                     </p>
                                 </div>
@@ -142,7 +142,7 @@ export default {
             return {
                 id: null,
                 event_id: this.event.id,
-                remind_at: null,
+                scheduled_at: null,
             };
         },
         addReminder() {

@@ -11,11 +11,11 @@
                     <label for="single">This event</label>
                 </div>
 
-<!--                <div class="field">-->
-<!--                    <input class="is-checkradio" id="following" type="radio"-->
-<!--                           name="type" checked="checked" value="following" v-model="type">-->
-<!--                    <label for="following">This and following events</label>-->
-<!--                </div>-->
+                <div class="field">
+                    <input class="is-checkradio" id="futures" type="radio"
+                           name="type" checked="checked" value="futures" v-model="type">
+                    <label for="futures">This and following events</label>
+                </div>
 
                 <div class="field">
                     <input class="is-checkradio" id="all" type="radio"
