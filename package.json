@@ -41,7 +41,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.2.0",
     "v-tooltip": "^2.0.0-rc.32",
     "vue": "^2.5.16",
-    "vue-cal": "^2.0.1",
+    "vue-cal": "^2.12.1",
     "vuex": "^3.0.0"
   }
 }

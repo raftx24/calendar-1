@@ -8,20 +8,23 @@
             ref="form"
             disable-state
             @ready="init">
-            <template v-slot:starts_at="props">
+            <template v-slot:starts_date="props">
                 <form-field v-bind="props"
                     @input="
-                        $refs.form.field('ends_at').meta.min = $event;
+                        $refs.form.field('ends_date').meta.min = $event;
                         $refs.form.field('recurrence_ends_at').meta.min = $event;
                     "/>
             </template>
-            <template v-slot:ends_at="props">
+            <template v-slot:ends_date="props">
                 <form-field v-bind="props"
-                    @input="$refs.form.field('starts_at').meta.max = $event;"/>
+                    @input="$refs.form.field('starts_date').meta.max = $event;"/>
             </template>
             <template v-slot:frequence="props">
+                <form-field v-bind="props" @input="changeFrequence($event)"/>
+            </template>
+            <template v-slot:update_type="props">
                 <form-field v-bind="props"
-                    @input="$refs.form.field('recurrence_ends_at').meta.hidden = $event === 1"/>
+                    @input="$refs.form.field('update_type').meta.hidden = $event === 1"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -29,11 +32,11 @@
                     <div class="columns">
                         <div class="column is-3">
                             <fade>
-                                <a class="button is-small is-naked has-margin-top-medium is-pulled-right"
-                                    @click="field.value.push(reminderFactory())"
+                                <a @click="field.value.push(reminderFactory())"
+                                    class="button is-small is-naked has-margin-top-medium is-pulled-right"
                                     v-if="
                                         field.value.length < 3
-                                        && !field.value.some(({ remind_at }) => !remind_at)
+                                        && !field.value.some(({ scheduled_at }) => !scheduled_at)
                                     ">
                                     <span class="icon is-small">
                                         <fa icon="plus"/>
@@ -50,7 +53,7 @@
                                 :key="index">
                                 <div class="column is-9 animated fadeIn">
                                     <p class="has-margin-bottom-small">
-                                        <enso-datepicker v-model="reminder.remind_at"
+                                        <enso-datepicker v-model="reminder.scheduled_at"
                                             v-bind="field.meta"/>
                                     </p>
                                 </div>
@@ -71,19 +74,27 @@
                     </div>
                 </div>
             </template>
+            <template v-slot:calendar_id="{field,errors}">
+                <color-select :field="field" :errors="errors"/>
+            </template>
         </enso-form>
+        <event-confirmation v-if="confirm"
+            @confirm="confirm($event); confirm=null"
+            @cancel="confirm=null"/>
     </modal>
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import {
+    Modal, EnsoForm, FormField, EnsoDatepicker,
+} from '@enso-ui/bulma';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
-import { Modal } from '@enso-ui/modal/bulma';
-import { EnsoForm, FormField } from '@enso-ui/forms/bulma';
-import { EnsoDatepicker } from '@enso-ui/datepicker/bulma';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
+import EventConfirmation from './EventConfirmation.vue';
+import ColorSelect from './ColorSelect.vue';
 
 library.add(faUserClock, faPlus, faMinus);
 
@@ -91,7 +102,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade,
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation, ColorSelect,
     },
 
     inject: ['i18n', 'route'],
@@ -102,37 +113,53 @@ export default {
             required: true,
         },
     },
-
+    data: () => ({
+        confirm: null,
+        timeFormat: 'H:i'
+    }),
     computed: {
         ...mapState(['meta']),
+        isEdit() {
+            return this.event.id;
+        },
         path() {
-            return this.event.id
+            return this.isEdit
                 ? this.route('core.calendar.events.edit', { event: this.event.id })
                 : this.route('core.calendar.events.create');
         },
         reminderFormat() {
-            return `${this.meta.dateFormat} H:i`;
+            return `${this.meta.dateFormat} ${this.timeFormat}`;
         },
     },
 
     methods: {
         init() {
-            if (this.event.startDate && this.event.startTime) { this.$refs.form.field('starts_at').value = `${this.dateFormat(this.event.startDate)} ${this.event.startTime.trim()}`; }
-            if (this.event.endDate && this.event.endTime) { this.$refs.form.field('ends_at').value = `${this.dateFormat(this.event.endDate)} ${this.event.endTime.trim()}`; }
+            this.$refs.form.field('starts_date').value = this.date(this.event.start);
+            this.$refs.form.field('starts_time').value = this.time(this.event.start);
+            this.$refs.form.field('ends_date').value = this.date(this.event.end);
+            this.$refs.form.field('ends_time').value = this.time(this.event.end);
         },
         reminderFactory() {
             return {
                 id: null,
                 event_id: this.event.id,
-                remind_at: null,
+                scheduled_at: null,
             };
         },
         addReminder() {
             this.$refs.form.field('reminders')
                 .value.push(this.reminder());
         },
-        dateFormat(date) {
+        date(date) {
             return format(date, this.meta.dateFormat);
+        },
+        time(dateTime) {
+            return format(dateTime, 'H:i');
+        },
+        changeFrequence(frequence) {
+            console.log('this.isEdit\t', this.isEdit);
+            this.$refs.form.field('recurrence_ends_at').meta.hidden = frequence === 1;
+            this.$refs.form.field('update_type').meta.hidden = !this.isEdit || frequence === 1;
         },
     },
 };
@@ -141,5 +168,6 @@ export default {
 <style lang="scss">
     .modal.event-modal .modal-content {
         overflow: visible;
+        width: 750px;
     }
 </style>

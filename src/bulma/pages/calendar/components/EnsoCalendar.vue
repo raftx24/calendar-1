@@ -3,29 +3,33 @@
         <vue-cal class="vuecal--green-theme"
             :time-from="7 * 60"
             :locale="lang"
+            :selected-date="selectedDate"
             :events="events"
             show-all-day-events
+            today-button
+            watch-real-time
             events-count-on-year-view
             v-bind="$attrs"
+            @ready="updateInterval"
+            @view-change="updateInterval"
             @event-mouse-enter="hovering = $event.id"
             @event-mouse-leave="hovering = null"
+            @event-delete="destroy"
+            @event-duration-change="update"
+            :on-event-dblclick="selectEvent"
             :on-event-create="addEvent"
             editable-events
-            resize-x
             v-on="$listeners">
-            <template v-slot:title="{ title, view }">
-                <div>
-                    {{ title }}
-                    <a class="button is-primary is-small is-rounded has-margin-left-large"
-                        @click.stop="$emit('add-event')">
-                        <span class="is-bold">
-                            {{ i18n('Add Event') }}
-                        </span>
-                        <span class="icon is-small">
-                            <fa icon="plus"/>
-                        </span>
-                    </a>
-                </div>
+            <template v-slot:today-button>
+                <a class="button is-primary is-small">
+                    <span class="is-bold">
+                        {{ i18n('Today') }}
+                    </span>
+                    <span class="icon is-small">
+                        <fa icon="crosshairs"
+                            size="xs"/>
+                    </span>
+                </a>
             </template>
             <template v-slot:event-renderer="{ event, view }">
                 <div>
@@ -38,14 +42,18 @@
                     <div v-if="!event.allDay">
                         <p class="has-text-centered"
                             v-if="hovering === event.id">
-                                {{ dateFormat(event.daysCount,event.start) }}
+                                {{ dateTimeFormat(event.daysCount,event.start) }}
                                 <fa icon="arrows-alt-h"/>
-                                {{ dateFormat(event.daysCount,event.end) }}
+                                {{ dateTimeFormat(event.daysCount,event.end) }}
                         </p>
                     </div>
                 </div>
             </template>
         </vue-cal>
+
+        <event-confirmation v-if="confirm"
+                            @confirm="confirm($event); confirm=null"
+                            @cancel="fetch(); confirm=null"/>
     </div>
 </template>
 
@@ -53,53 +61,144 @@
 import { mapState, mapGetters } from 'vuex';
 import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlus, faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
+import { faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
-import 'vue-cal/dist/vuecal.css';
+import EventConfirmation from './EventConfirmation';
 
-library.add(faPlus, faFlag, faArrowsAltH);
+import('../styles/colors.scss');
+
+library.add(faFlag, faArrowsAltH);
 
 export default {
     name: 'EnsoCalendar',
 
-    components: { VueCal },
+    components: { VueCal, EventConfirmation },
 
-    inject: ['i18n'],
+    inject: ['errorHandler', 'route', 'i18n'],
 
     props: {
-        events: {
-            type: Array,
+        selectedDate: {
+            required: true,
+        },
+        calendars: {
             required: true,
         },
     },
-
-    data: () => ({
-        event: null,
-        hovering: null,
-    }),
-
-    methods: {
-        addEvent(event, deleteFunction) {
-            [event.startDate, event.startTime] = event.start.split(' ');
-            [event.endDate, event.endTime] = event.end.split(' ');
-            this.$emit('add-event', event);
-        },
-        dateFormat(daysCount, date) {
-            if (daysCount > 1) {
-                return format(date, 'm-d h:i');
+    computed: {
+        ...mapState(['meta']),
+        ...mapGetters('preferences', ['lang']),
+        params() {
+            if (!this.interval) {
+                return { calendars: this.calendars };
             }
 
-            return format(date, 'h:i');
+            if (this.interval.view === 'month') {
+                return {
+                    calendars: this.calendars,
+                    startDate: `${this.dateFormat(this.interval.firstCellDate)} 00:00:00`,
+                    endDate: `${this.dateFormat(this.interval.lastCellDate)} 23:59:59`,
+                };
+            }
+            return {
+                calendars: this.calendars,
+                startDate: `${this.dateFormat(this.interval.startDate)} 00:00:00`,
+                endDate: `${this.dateFormat(this.interval.endDate)} 23:59:59`,
+            };
         },
     },
-    computed: {
-        ...mapState(['enums']),
-        ...mapGetters('preferences', ['lang']),
+    watch: {
+        calendars() {
+            this.fetch();
+        },
+    },
+    data: () => ({
+        events: [],
+        event: null,
+        confirm: null,
+        hovering: null,
+        interval: null,
+    }),
+    methods: {
+        fetch() {
+            if (this.calendars) {
+                axios.get(this.route('core.calendar.events.index'), { params: this.params })
+                    .then(({ data }) => (this.events = data))
+                    .catch(this.errorHandler);
+            }
+        },
+        addEvent(event) {
+            this.$emit('edit-event', event);
+        },
+        update($event, updateType) {
+            if ($event.frequence === 1 || updateType !== undefined) {
+                axios.patch(
+                    this.route('core.calendar.events.update', { event: $event.id }),
+                    { ends_time: this.timeFormat($event.end), update_type: updateType },
+                ).then(({ data }) => {
+                    this.$toastr.success(data.message);
+                    this.fetch();
+                }).catch(this.errorHandler);
+                return;
+            }
+            this.confirm = (updateType) => {
+                this.update($event, updateType);
+            };
+        },
+        updateInterval(interval) {
+            this.interval = interval;
+            this.fetch();
+        },
+        selectEvent(event, e) {
+            if (event.route) {
+                this.$router.push(event.route);
+                return;
+            }
+
+            if (!event.readonly) {
+                this.$emit('edit-event', event);
+            }
+
+            e.stopPropagation();
+        },
+        destroy($event, updateType) {
+            if ($event.frequence === 1 || updateType !== undefined) {
+                axios.delete(
+                    this.route(
+                        'core.calendar.events.destroy',
+                        { event: $event.id, updateType: updateType || 'single' },
+                    ),
+                ).then(() => (this.fetch())).catch(this.errorHandler);
+                return;
+            }
+
+            this.confirm = (updateType) => {
+                this.destroy($event, updateType);
+            };
+        },
+        dateTimeFormat(daysCount, date) {
+            return daysCount > 1
+                ? format(date, 'm-d h:i')
+                : format(date, 'h:i');
+        },
+        dateFormat(date) {
+            return format(date, `${this.meta.dateFormat}`);
+        },
+        timeFormat(dateTime) {
+            return format(dateTime, 'H:i');
+        },
     },
 };
 </script>
 
 <style lang="scss">
+    .vuecal__cell-content {align-self: flex-start;}
+    .vuecal__cell-date {text-align: right;padding: 4px;}
+
+    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.love,
+    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.love {right: 50%;}
+    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.leisure,
+    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.leisure {left: 50%;}
+
     .calendar-wrapper {
         .vuecal {
             border-radius: inherit;
@@ -107,46 +206,13 @@ export default {
             .vuecal__cell:hover {
                 cursor: pointer;
             }
-
-            .vuecal__all-day {
-                max-height: 4em;
-            }
         }
-
         .vuecal__event {
             .event-body {
                 white-space: pre;
             }
-
-            &.is-info {
-                background-color: rgba(100,200,255,.8);
-                border: 1px solid #50b4eb;
-                color: #fff;
-            }
-
-            &.is-danger {
-                background-color: rgba(231,76,60,.8);
-                border: 1px solid #e74c3c;
-                color: #fff;
-            }
-
-            &.is-warning {
-                background-color: rgba(225,221,87,.8);
-                border: 1px solid #ffdd57;
-                color: #4a4a4a;
-            }
-
-            &.is-success {
-                background-color: rgba(35,209,96,.8);
-                border: 1px solid #23d160;
-                color: #fff;
-            }
-
-            &.is-primary {
-                background-color: rgba(164,230,210,.9);
-                border: 1px solid #90d2be;
-            }
         }
+
 
         .vuecal__event-resize-handle {
                 &:after {
