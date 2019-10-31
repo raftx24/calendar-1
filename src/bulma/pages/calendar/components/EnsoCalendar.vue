@@ -127,8 +127,6 @@ export default {
             }
         },
         addEvent(event) {
-            [event.startDate, event.startTime] = event.start.split(' ');
-            [event.endDate, event.endTime] = event.end.split(' ');
             this.$emit('edit-event', event);
         },
         update($event, updateType) {

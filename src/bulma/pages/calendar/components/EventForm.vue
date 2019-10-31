@@ -134,11 +134,10 @@ export default {
 
     methods: {
         init() {
-            this.$refs.form.field('starts_date').value = this.date(this.event.startDate);
-            this.$refs.form.field('starts_time').value = this.time(this.event.startDate);;
-            this.$refs.form.field('ends_date').value = this.date(this.event.endDate);
-            this.$refs.form.field('ends_time').value = this.time(this.event.endDate);
-
+            this.$refs.form.field('starts_date').value = this.date(this.event.start);
+            this.$refs.form.field('starts_time').value = this.time(this.event.start);
+            this.$refs.form.field('ends_date').value = this.date(this.event.end);
+            this.$refs.form.field('ends_time').value = this.time(this.event.end);
         },
         reminderFactory() {
             return {
