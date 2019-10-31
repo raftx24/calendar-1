@@ -79,8 +79,8 @@
             </template>
         </enso-form>
         <event-confirmation v-if="confirm"
-                            @confirm="confirm($event); confirm=null"
-                            @cancel="confirm=null"/>
+            @confirm="confirm($event); confirm=null"
+            @cancel="confirm=null"/>
     </modal>
 </template>
 
@@ -115,6 +115,7 @@ export default {
     },
     data: () => ({
         confirm: null,
+        timeFormat: 'H:i'
     }),
     computed: {
         ...mapState(['meta']),
@@ -127,16 +128,17 @@ export default {
                 : this.route('core.calendar.events.create');
         },
         reminderFormat() {
-            return `${this.meta.dateFormat} H:i`;
+            return `${this.meta.dateFormat} ${this.timeFormat}`;
         },
     },
 
     methods: {
         init() {
-            this.$refs.form.field('starts_date').value = this.dateFormat(this.event.startDate);
-            this.$refs.form.field('starts_time').value = this.event.startTime.trim();
-            this.$refs.form.field('ends_date').value = this.dateFormat(this.event.endDate);
-            this.$refs.form.field('ends_time').value = this.event.endTime.trim();
+            this.$refs.form.field('starts_date').value = this.date(this.event.startDate);
+            this.$refs.form.field('starts_time').value = this.time(this.event.startDate);;
+            this.$refs.form.field('ends_date').value = this.date(this.event.endDate);
+            this.$refs.form.field('ends_time').value = this.time(this.event.endDate);
+
         },
         reminderFactory() {
             return {
@@ -149,8 +151,11 @@ export default {
             this.$refs.form.field('reminders')
                 .value.push(this.reminder());
         },
-        dateFormat(date) {
+        date(date) {
             return format(date, this.meta.dateFormat);
+        },
+        time(dateTime) {
+            return format(dateTime, 'H:i');
         },
         changeFrequence(frequence) {
             console.log('this.isEdit\t', this.isEdit);
