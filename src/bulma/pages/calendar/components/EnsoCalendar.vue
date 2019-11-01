@@ -52,8 +52,8 @@
         </vue-cal>
 
         <event-confirmation v-if="confirm"
-                            @confirm="confirm($event); confirm=null"
-                            @cancel="fetch(); confirm=null"/>
+            @confirm="confirm($event); confirm=null"
+            @cancel="fetch(); confirm=null"/>
     </div>
 </template>
 
@@ -238,6 +238,13 @@ export default {
             }
         .vuecal__time-column {
             height: auto;
+
+            .vuecal__time-cell .label {
+                color: inherit;
+                display: inherit;
+                font-size: inherit;
+                font-weight: inherit;
+            }
         }
     }
 </style>
