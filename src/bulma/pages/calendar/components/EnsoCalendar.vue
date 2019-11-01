@@ -133,7 +133,7 @@ export default {
             if ($event.frequence === 1 || updateType !== undefined) {
                 axios.patch(
                     this.route('core.calendar.events.update', { event: $event.id }),
-                    { ends_time: this.timeFormat($event.end), update_type: updateType },
+                    { end_time: this.timeFormat($event.end), update_type: updateType },
                 ).then(({ data }) => {
                     this.$toastr.success(data.message);
                     this.fetch();
