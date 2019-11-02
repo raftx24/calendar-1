@@ -84,6 +84,15 @@ export default {
             required: true,
         },
     },
+
+    data: () => ({
+        events: [],
+        event: null,
+        confirm: null,
+        hovering: null,
+        interval: null,
+    }),
+
     computed: {
         ...mapState(['meta']),
         ...mapGetters('preferences', ['lang']),
@@ -106,19 +115,27 @@ export default {
             };
         },
     },
+
     watch: {
         calendars() {
             this.fetch();
         },
     },
-    data: () => ({
-        events: [],
-        event: null,
-        confirm: null,
-        hovering: null,
-        interval: null,
-    }),
+
+    mounted() {
+        this.resize();
+
+        window.addEventListener('resize', this.resize);
+    },
+
+    beforeDestroy() {
+        window.removeEventListener('resize', this.resize);
+    },
+
     methods: {
+        resize() {
+            this.$el.style.height = `${document.body.clientHeight - 170}px`;
+        },
         fetch() {
             if (this.calendars) {
                 axios.get(this.route('core.calendar.events.index'), { params: this.params })
@@ -191,17 +208,19 @@ export default {
 </script>
 
 <style lang="scss">
-    .vuecal__cell-content {align-self: flex-start;}
-    .vuecal__cell-date {text-align: right;padding: 4px;}
-
-    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.love,
-    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.love {right: 50%;}
-    .vuecal--week-view .vuecal__bg .vuecal__event--all-day.leisure,
-    .vuecal--day-view .vuecal__bg .vuecal__event--all-day.leisure {left: 50%;}
-
     .calendar-wrapper {
+        height: 100%;
+
         .vuecal {
             border-radius: inherit;
+
+            .vuecal__body {
+                overflow: auto;
+
+                .vuecal__bg {
+                    overflow: visible;
+                }
+            }
 
             .vuecal__cell:hover {
                 cursor: pointer;

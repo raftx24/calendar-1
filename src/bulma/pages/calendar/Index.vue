@@ -1,5 +1,5 @@
 <template>
-    <div class="events-wrapper">
+    <div class="wrapper">
         <div class="columns">
             <div class="column is-2-desktop is-8-tablet is-12-mobile">
                 <calendar-filter @change-date="selectedDate = $event"
@@ -43,15 +43,7 @@ export default {
         this.hideFooter();
     },
 
-    mounted() {
-        this.resize();
-
-        window.addEventListener('resize', this.resize);
-    },
-
     beforeDestroy() {
-        window.removeEventListener('resize', this.resize);
-
         this.showFooter();
     },
 
@@ -60,9 +52,6 @@ export default {
         reloadEvents() {
             this.$refs.calendar.fetch();
             this.event = null;
-        },
-        resize() {
-            this.$el.style.height = `${document.body.clientHeight - 270}px`;
         },
     },
 };
