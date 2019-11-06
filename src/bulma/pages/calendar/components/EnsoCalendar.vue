@@ -189,11 +189,7 @@ export default {
                 axios.delete(
                     this.route(
                         'core.calendar.events.destroy',
-                        {
-                            event: $event.id,
-                            updateType: updateType || 'single',
-                            frequence: updateType === 'single' ? 1 : undefined,
-                        },
+                        { event: $event.id, updateType: updateType || 'single' },
                     ),
                 ).then(() => (this.fetch())).catch(this.errorHandler);
                 return;
