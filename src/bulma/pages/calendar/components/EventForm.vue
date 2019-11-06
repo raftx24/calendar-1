@@ -24,7 +24,7 @@
             </template>
             <template v-slot:update_type="props">
                 <form-field v-bind="props"
-                    @input="$refs.form.field('update_type').meta.hidden = $event === 1"/>
+                    @input="changeUpdateType($event)"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -115,7 +115,7 @@ export default {
     },
     data: () => ({
         confirm: null,
-        timeFormat: 'H:i'
+        timeFormat: 'H:i',
     }),
     computed: {
         ...mapState(['meta']),
@@ -157,9 +157,12 @@ export default {
             return format(dateTime, 'H:i');
         },
         changeFrequence(frequence) {
-            console.log('this.isEdit\t', this.isEdit);
             this.$refs.form.field('recurrence_ends_at').meta.hidden = frequence === 1;
-            this.$refs.form.field('update_type').meta.hidden = !this.isEdit || frequence === 1;
+        },
+        changeUpdateType(updateType) {
+            if (updateType === 'single') {
+                this.$refs.form.field('frequence').value = 1;
+            }
         },
     },
 };

@@ -52,6 +52,7 @@
         </vue-cal>
 
         <event-confirmation v-if="confirm"
+            :is-parent="event.parent_id === null"
             @confirm="confirm($event); confirm=null"
             @cancel="fetch(); confirm=null"/>
     </div>
@@ -147,10 +148,15 @@ export default {
             this.$emit('edit-event', event);
         },
         update($event, updateType) {
+            this.event = $event;
             if ($event.frequence === 1 || updateType !== undefined) {
                 axios.patch(
                     this.route('core.calendar.events.update', { event: $event.id }),
-                    { end_time: this.timeFormat($event.end), update_type: updateType },
+                    {
+                        end_time: this.timeFormat($event.end),
+                        update_type: updateType,
+                        frequence: updateType === 'single' ? 1 : undefined,
+                    },
                 ).then(({ data }) => {
                     this.$toastr.success(data.message);
                     this.fetch();
@@ -178,11 +184,16 @@ export default {
             e.stopPropagation();
         },
         destroy($event, updateType) {
+            this.event = $event;
             if ($event.frequence === 1 || updateType !== undefined) {
                 axios.delete(
                     this.route(
                         'core.calendar.events.destroy',
-                        { event: $event.id, updateType: updateType || 'single' },
+                        {
+                            event: $event.id,
+                            updateType: updateType || 'single',
+                            frequence: updateType === 'single' ? 1 : undefined,
+                        },
                     ),
                 ).then(() => (this.fetch())).catch(this.errorHandler);
                 return;

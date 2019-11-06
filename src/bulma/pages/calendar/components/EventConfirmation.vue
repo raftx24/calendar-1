@@ -17,7 +17,7 @@
                     <label for="futures">This and following events</label>
                 </div>
 
-                <div class="field">
+                <div class="field" v-if="! isParent">
                     <input class="is-checkradio" id="all" type="radio"
                            name="type" checked="checked" value="all" v-model="type">
                     <label for="all">All events</label>
@@ -63,10 +63,13 @@ export default {
     inject: ['errorHandler', 'route', 'i18n'],
 
     props: {
-
+        isParent: {
+            type: Boolean,
+            default: false,
+        },
     },
     data: () => ({
-        type: 'single',
+        type: 'futures',
     }),
     computed: {
     },
