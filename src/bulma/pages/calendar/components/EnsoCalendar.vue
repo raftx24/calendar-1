@@ -50,11 +50,9 @@
                 </div>
             </template>
         </vue-cal>
-
         <event-confirmation v-if="confirm"
-            :is-parent="event.parent_id === null"
-            @confirm="confirm($event); confirm=null"
-            @cancel="fetch(); confirm=null"/>
+            @confirm="confirm($event); confirm = null"
+            @cancel="fetch(); confirm = null"/>
     </div>
 </template>
 
@@ -95,7 +93,7 @@ export default {
     }),
 
     computed: {
-        ...mapState(['meta']),
+        ...mapState(['meta', 'enums']),
         ...mapGetters('preferences', ['lang']),
         params() {
             if (!this.interval) {
@@ -147,25 +145,19 @@ export default {
         addEvent(event) {
             this.$emit('edit-event', event);
         },
-        update($event, updateType) {
-            this.event = $event;
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.patch(
-                    this.route('core.calendar.events.update', { event: $event.id }),
-                    {
-                        end_time: this.timeFormat($event.end),
-                        update_type: updateType,
-                        frequence: updateType === 'single' ? 1 : undefined,
-                    },
-                ).then(({ data }) => {
-                    this.$toastr.success(data.message);
-                    this.fetch();
-                }).catch(this.errorHandler);
+        update($event, updateType = null) {
+            if (this.needsConfirmation($event, updateType)) {
+                this.confirm = updateType => this.update($event, updateType);
                 return;
             }
-            this.confirm = (updateType) => {
-                this.update($event, updateType);
-            };
+
+            axios.patch(
+                this.route('core.calendar.events.update', { event: $event.id }),
+                { end_time: this.timeFormat($event.end), updateType },
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.fetch();
+            }).catch(this.errorHandler);
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -184,20 +176,22 @@ export default {
             e.stopPropagation();
         },
         destroy($event, updateType) {
-            this.event = $event;
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.delete(
-                    this.route(
-                        'core.calendar.events.destroy',
-                        { event: $event.id, updateType: updateType || 'single' },
-                    ),
-                ).then(() => (this.fetch())).catch(this.errorHandler);
+            if (this.needsConfirmation($event, updateType)) {
+                this.confirm = updateType => this.destroy($event, updateType);
                 return;
             }
 
-            this.confirm = (updateType) => {
-                this.destroy($event, updateType);
-            };
+            updateType = updateType || enums.eventUpdateType.OnlyThisEvent;
+
+            axios.delete(
+                this.route('core.calendar.events.destroy', { event: $event.id }),
+                { params: { updateType } },
+            ).then(() => this.fetch())
+            .catch(this.errorHandler);
+        },
+        needsConfirmation($event, updateType) {
+            return updateType == null
+                && `${$event.frequence}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1
