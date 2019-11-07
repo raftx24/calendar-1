@@ -1,5 +1,6 @@
 <template>
-    <modal :show="true">
+    <modal show
+        v-on="$listeners">
         <div class="box">
             <h5 class="subtitle is-5">
                 {{ i18n("Choose change type for the recurring event") }}
@@ -55,6 +56,7 @@
                 <div class="level-right">
                     <div class="level-item">
                         <button class="button is-danger has-margin-left-small"
+                            :disabled="type === null"
                             @click="$emit('confirm', type)">
                             {{ i18n('Confirm') }}
                         </button>
@@ -90,7 +92,7 @@ export default {
     },
 
     data: () => ({
-        type: 'futures',
+        type: null',
     }),
 
     computed: {
