@@ -56,6 +56,7 @@
                 <div class="level-right">
                     <div class="level-item">
                         <button class="button is-danger has-margin-left-small"
+                            :disabled="type === null"
                             @click="$emit('confirm', type)">
                             {{ i18n('Confirm') }}
                         </button>
@@ -91,7 +92,7 @@ export default {
     },
 
     data: () => ({
-        type: 'futures',
+        type: null',
     }),
 
     computed: {
