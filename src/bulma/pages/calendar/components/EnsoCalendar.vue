@@ -142,7 +142,7 @@ export default {
         addEvent(event) {
             this.$emit('edit-event', event);
         },
-        update($event, updateType) {
+        update($event, updateType = null) {
             this.event = $event;
 
             if (this.needsConfirmation(updateType)) {
@@ -174,7 +174,7 @@ export default {
             }
             e.stopPropagation();
         },
-        destroy($event, updateType) {
+        destroy($event, updateType = null) {
             this.event = $event;
 
             if (this.needsConfirmation(updateType)) {
@@ -191,7 +191,7 @@ export default {
             .catch(this.errorHandler);
         },
         needsConfirmation(updateType) {
-            return updateType == null
+            return updateType === null
                 && `${this.event.frequence}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {
