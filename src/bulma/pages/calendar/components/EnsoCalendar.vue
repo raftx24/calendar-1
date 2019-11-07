@@ -50,9 +50,11 @@
                 </div>
             </template>
         </vue-cal>
+
         <event-confirmation v-if="confirm"
-            @confirm="confirm($event); confirm = null"
-            @cancel="fetch(); confirm = null"/>
+            :is-parent="event.parent_id === null"
+            @confirm="confirm($event); confirm=null"
+            @cancel="fetch(); confirm=null"/>
     </div>
 </template>
 
@@ -63,18 +65,12 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 import EventConfirmation from './EventConfirmation';
-
 import('../styles/colors.scss');
-
 library.add(faFlag, faArrowsAltH);
-
 export default {
     name: 'EnsoCalendar',
-
     components: { VueCal, EventConfirmation },
-
     inject: ['errorHandler', 'route', 'i18n'],
-
     props: {
         selectedDate: {
             required: true,
@@ -83,7 +79,6 @@ export default {
             required: true,
         },
     },
-
     data: () => ({
         events: [],
         event: null,
@@ -91,15 +86,13 @@ export default {
         hovering: null,
         interval: null,
     }),
-
     computed: {
-        ...mapState(['meta', 'enums']),
+        ...mapState(['meta']),
         ...mapGetters('preferences', ['lang']),
         params() {
             if (!this.interval) {
                 return { calendars: this.calendars };
             }
-
             if (this.interval.view === 'month') {
                 return {
                     calendars: this.calendars,
@@ -114,23 +107,18 @@ export default {
             };
         },
     },
-
     watch: {
         calendars() {
             this.fetch();
         },
     },
-
     mounted() {
         this.resize();
-
         window.addEventListener('resize', this.resize);
     },
-
     beforeDestroy() {
         window.removeEventListener('resize', this.resize);
     },
-
     methods: {
         resize() {
             this.$el.style.height = `${document.body.clientHeight - 170}px`;
@@ -145,19 +133,25 @@ export default {
         addEvent(event) {
             this.$emit('edit-event', event);
         },
-        update($event, updateType = null) {
-            if (this.needsConfirmation($event, updateType)) {
-                this.confirm = updateType => this.update($event, updateType);
+        update($event, updateType) {
+            this.event = $event;
+            if ($event.frequence === 1 || updateType !== undefined) {
+                axios.patch(
+                    this.route('core.calendar.events.update', { event: $event.id }),
+                    {
+                        end_time: this.timeFormat($event.end),
+                        update_type: updateType,
+                        frequence: updateType === 'single' ? 1 : undefined,
+                    },
+                ).then(({ data }) => {
+                    this.$toastr.success(data.message);
+                    this.fetch();
+                }).catch(this.errorHandler);
                 return;
             }
-
-            axios.patch(
-                this.route('core.calendar.events.update', { event: $event.id }),
-                { end_time: this.timeFormat($event.end), updateType },
-            ).then(({ data }) => {
-                this.$toastr.success(data.message);
-                this.fetch();
-            }).catch(this.errorHandler);
+            this.confirm = (updateType) => {
+                this.update($event, updateType);
+            };
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -168,30 +162,25 @@ export default {
                 this.$router.push(event.route);
                 return;
             }
-
             if (!event.readonly) {
                 this.$emit('edit-event', event);
             }
-
             e.stopPropagation();
         },
         destroy($event, updateType) {
-            if (this.needsConfirmation($event, updateType)) {
-                this.confirm = updateType => this.destroy($event, updateType);
+            this.event = $event;
+            if ($event.frequence === 1 || updateType !== undefined) {
+                axios.delete(
+                    this.route(
+                        'core.calendar.events.destroy',
+                        { event: $event.id, updateType: updateType || 'single' },
+                    ),
+                ).then(() => (this.fetch())).catch(this.errorHandler);
                 return;
             }
-
-            updateType = updateType || enums.eventUpdateType.OnlyThisEvent;
-
-            axios.delete(
-                this.route('core.calendar.events.destroy', { event: $event.id }),
-                { params: { updateType } },
-            ).then(() => this.fetch())
-            .catch(this.errorHandler);
-        },
-        needsConfirmation($event, updateType) {
-            return updateType == null
-                && `${$event.frequence}` !== this.enums.eventFrequencies.Once;
+            this.confirm = (updateType) => {
+                this.destroy($event, updateType);
+            };
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1
@@ -211,18 +200,14 @@ export default {
 <style lang="scss">
     .calendar-wrapper {
         height: 100%;
-
         .vuecal {
             border-radius: inherit;
-
             .vuecal__body {
                 overflow: auto;
-
                 .vuecal__bg {
                     overflow: visible;
                 }
             }
-
             .vuecal__cell:hover {
                 cursor: pointer;
             }
@@ -232,8 +217,6 @@ export default {
                 white-space: pre;
             }
         }
-
-
         .vuecal__event-resize-handle {
                 &:after {
                     top: 5px;
@@ -258,7 +241,6 @@ export default {
             }
         .vuecal__time-column {
             height: auto;
-
             .vuecal__time-cell .label {
                 color: inherit;
                 display: inherit;
