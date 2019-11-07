@@ -53,7 +53,8 @@
         <event-confirmation v-if="confirm"
             :is-parent="event.parent_id === null"
             @confirm="confirm($event); confirm = null; event = null"
-            @cancel="fetch(); confirm = null; event = null"/>
+            @cancel="fetch(); confirm = null; event = null"
+            @close="confirm = null; event = null;"/>
     </div>
 </template>
 
