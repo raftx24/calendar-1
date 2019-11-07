@@ -8,7 +8,10 @@
             ref="form"
             disable-state>
             <template v-slot:color="{field,errors}">
-                <color-select :field="field" :errors="errors" color-field="name"/>
+                <color-select
+                    :field="field"
+                    :errors="errors"
+                    color-field="name"/>
             </template>
         </enso-form>
     </modal>

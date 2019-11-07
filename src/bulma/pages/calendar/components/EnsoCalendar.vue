@@ -3,7 +3,7 @@
         <vue-cal class="vuecal--green-theme"
             :time-from="7 * 60"
             :locale="lang"
-            :selected-date="selectedDate"
+            :selected-date="date"
             :events="events"
             show-all-day-events
             today-button
@@ -50,11 +50,10 @@
                 </div>
             </template>
         </vue-cal>
-
         <event-confirmation v-if="confirm"
             :is-parent="event.parent_id === null"
-            @confirm="confirm($event); confirm=null"
-            @cancel="fetch(); confirm=null"/>
+            @confirm="confirm($event); confirm = null; event = null"
+            @cancel="fetch(); confirm = null; event = null"/>
     </div>
 </template>
 
@@ -66,19 +65,25 @@ import { faFlag, faArrowsAltH } from '@fortawesome/free-solid-svg-icons';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 import EventConfirmation from './EventConfirmation';
 import('../styles/colors.scss');
+
 library.add(faFlag, faArrowsAltH);
+
 export default {
     name: 'EnsoCalendar',
+
     components: { VueCal, EventConfirmation },
+
     inject: ['errorHandler', 'route', 'i18n'],
+
     props: {
-        selectedDate: {
+        date: {
             required: true,
         },
         calendars: {
             required: true,
         },
     },
+
     data: () => ({
         events: [],
         event: null,
@@ -86,8 +91,9 @@ export default {
         hovering: null,
         interval: null,
     }),
+
     computed: {
-        ...mapState(['meta']),
+        ...mapState(['enums', 'meta']),
         ...mapGetters('preferences', ['lang']),
         params() {
             if (!this.interval) {
@@ -107,18 +113,20 @@ export default {
             };
         },
     },
+
     watch: {
-        calendars() {
-            this.fetch();
-        },
+        calendars: 'fetch',
     },
+
     mounted() {
         this.resize();
+
         window.addEventListener('resize', this.resize);
     },
     beforeDestroy() {
         window.removeEventListener('resize', this.resize);
     },
+
     methods: {
         resize() {
             this.$el.style.height = `${document.body.clientHeight - 170}px`;
@@ -135,23 +143,21 @@ export default {
         },
         update($event, updateType) {
             this.event = $event;
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.patch(
-                    this.route('core.calendar.events.update', { event: $event.id }),
-                    {
-                        end_time: this.timeFormat($event.end),
-                        update_type: updateType,
-                        frequence: updateType === 'single' ? 1 : undefined,
-                    },
+
+            if (this.needsConfirmation(updateType)) {
+                this.confirm = updateType => this.update($event, updateType);
+                return;
+            }
+
+            const frequence = updateType === 'single' ? 1 : undefined
+
+            axios.patch(
+                this.route('core.calendar.events.update', { event: $event.id }),
+                    { end_time: this.timeFormat($event.end), updateType, frequence }
                 ).then(({ data }) => {
                     this.$toastr.success(data.message);
                     this.fetch();
                 }).catch(this.errorHandler);
-                return;
-            }
-            this.confirm = (updateType) => {
-                this.update($event, updateType);
-            };
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -169,18 +175,23 @@ export default {
         },
         destroy($event, updateType) {
             this.event = $event;
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.delete(
-                    this.route(
-                        'core.calendar.events.destroy',
-                        { event: $event.id, updateType: updateType || 'single' },
-                    ),
-                ).then(() => (this.fetch())).catch(this.errorHandler);
+
+            if (this.needsConfirmation(updateType)) {
+                this.confirm = updateType => this.destroy($event, updateType);
                 return;
             }
-            this.confirm = (updateType) => {
-                this.destroy($event, updateType);
-            };
+
+            updateType = updateType || enums.eventUpdateType.OnlyThisEvent;
+
+            axios.delete(
+                this.route('core.calendar.events.destroy', { event: $event.id }),
+                { params: { updateType } },
+            ).then(this.fetch)
+            .catch(this.errorHandler);
+        },
+        needsConfirmation(updateType) {
+            return updateType == null
+                && `${this.event.frequence}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1

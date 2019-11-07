@@ -24,7 +24,10 @@
             </template>
             <template v-slot:update_type="props">
                 <form-field v-bind="props"
-                    @input="changeUpdateType($event)"/>
+                    @input="
+                        $refs.form.field('update_type')
+                            .meta.hidden = `${$event}` === enums.updateTypes.OnlyThisEvent
+                    "/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -36,7 +39,7 @@
                                     class="button is-small is-naked has-margin-top-medium is-pulled-right"
                                     v-if="
                                         field.value.length < 3
-                                        && !field.value.some(({ scheduled_at }) => !scheduled_at)
+                                            && !field.value.some(({ scheduled_at }) => !scheduled_at)
                                     ">
                                     <span class="icon is-small">
                                         <fa icon="plus"/>
@@ -78,9 +81,6 @@
                 <color-select :field="field" :errors="errors"/>
             </template>
         </enso-form>
-        <event-confirmation v-if="confirm"
-            @confirm="confirm($event); confirm=null"
-            @cancel="confirm=null"/>
     </modal>
 </template>
 
@@ -93,7 +93,6 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
-import EventConfirmation from './EventConfirmation.vue';
 import ColorSelect from './ColorSelect.vue';
 
 library.add(faUserClock, faPlus, faMinus);
@@ -102,7 +101,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation, ColorSelect,
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, ColorSelect,
     },
 
     inject: ['i18n', 'route'],
@@ -113,12 +112,13 @@ export default {
             required: true,
         },
     },
+
     data: () => ({
-        confirm: null,
-        timeFormat: 'H:i',
+        timeFormat: 'H:i'
     }),
+
     computed: {
-        ...mapState(['meta']),
+        ...mapState(['meta', 'enums']),
         isEdit() {
             return this.event.id;
         },
@@ -157,12 +157,8 @@ export default {
             return format(dateTime, 'H:i');
         },
         changeFrequence(frequence) {
-            this.$refs.form.field('recurrence_ends_at').meta.hidden = frequence === 1;
-        },
-        changeUpdateType(updateType) {
-            if (updateType === 'single') {
-                this.$refs.form.field('frequence').value = 1;
-            }
+            this.$refs.form.field('recurrence_ends_at')
+                .meta.hidden = `${frequence}` === this.enums.eventFrequencies.Once;
         },
     },
 };

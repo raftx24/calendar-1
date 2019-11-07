@@ -6,7 +6,7 @@
                     @update-selection="calendars = $event;"/>
             </div>
             <div class="column is-10-desktop is-12-tablet is-12-mobile">
-                <enso-calendar :selected-date="selectedDate"
+                <enso-calendar :date="selectedDate"
                     :calendars="calendars"
                     ref="calendar"
                     @edit-event="event = $event || {}"/>
