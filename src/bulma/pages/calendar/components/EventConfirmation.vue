@@ -1,5 +1,6 @@
 <template>
-    <modal :show="true">
+    <modal show
+        v-on="$listeners">
         <div class="box">
             <h5 class="subtitle is-5">
                 {{ i18n("Choose change type for the recurring event") }}
