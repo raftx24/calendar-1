@@ -53,7 +53,8 @@
         <event-confirmation v-if="confirm"
             :is-parent="event.parent_id === null"
             @confirm="confirm($event); confirm = null; event = null"
-            @cancel="fetch(); confirm = null; event = null"/>
+            @cancel="fetch(); confirm = null; event = null"
+            @close="confirm = null; event = null;"/>
     </div>
 </template>
 
@@ -141,7 +142,7 @@ export default {
         addEvent(event) {
             this.$emit('edit-event', event);
         },
-        update($event, updateType) {
+        update($event, updateType = null) {
             this.event = $event;
 
             if (this.needsConfirmation(updateType)) {
@@ -149,7 +150,9 @@ export default {
                 return;
             }
 
-            const frequence = updateType === 'single' ? 1 : undefined
+            const frequence = updateType === this.enums.eventUpdateTypes.OnlyThisEvent
+                ? this.enums.eventFrequencies.Once
+                : null; // TODO
 
             axios.patch(
                 this.route('core.calendar.events.update', { event: $event.id }),
@@ -173,7 +176,7 @@ export default {
             }
             e.stopPropagation();
         },
-        destroy($event, updateType) {
+        destroy($event, updateType = null) {
             this.event = $event;
 
             if (this.needsConfirmation(updateType)) {
@@ -190,7 +193,7 @@ export default {
             .catch(this.errorHandler);
         },
         needsConfirmation(updateType) {
-            return updateType == null
+            return updateType === null
                 && `${this.event.frequence}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {

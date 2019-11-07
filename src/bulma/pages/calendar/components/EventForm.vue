@@ -24,10 +24,7 @@
             </template>
             <template v-slot:update_type="props">
                 <form-field v-bind="props"
-                    @input="
-                        $refs.form.field('update_type')
-                            .meta.hidden = `${$event}` === enums.updateTypes.OnlyThisEvent
-                    "/>
+                    @input="changeUpdateType($event)"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -156,9 +153,14 @@ export default {
         time(dateTime) {
             return format(dateTime, 'H:i');
         },
+        changeUpdateType(updateType) {
+            if (updateType === this.enums.eventUpdateType.OnlyThisEvent) {
+                this.$refs.form.field('frequence').value = this.enums.eventFrequencies.Once;
+            }
+        },
         changeFrequence(frequence) {
             this.$refs.form.field('recurrence_ends_at')
-                .meta.hidden = `${frequence}` === this.enums.eventFrequencies.Once;
+                .meta.hidden = frequence === this.enums.eventFrequencies.Once;
         },
     },
 };
