@@ -12,13 +12,13 @@
             <template v-slot:selection="{selection,errors}"
                 v-if="ready">
                 <div>
-                    <span :class="'calendar-color calendar-'+selection[colorField]"/>
+                    <span :class="`calendar-color calendar-${selection[colorField]}`"/>
                     <span>{{ selection.name }}</span>
                 </div>
             </template>
             <template v-slot:option="{option}">
                 <div>
-                    <span :class="'calendar-color calendar-'+option[colorField]"/>
+                    <span :class="`calendar-color calendar-${option[colorField]}`"/>
                     <span>{{ option.name }}</span>
                 </div>
             </template>
