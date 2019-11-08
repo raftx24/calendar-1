@@ -19,12 +19,8 @@
                 <form-field v-bind="props"
                     @input="$refs.form.field('start_date').meta.max = $event;"/>
             </template>
-            <template v-slot:frequence="props">
-                <form-field v-bind="props" @input="changeFrequence($event)"/>
-            </template>
-            <template v-slot:update_type="props">
-                <form-field v-bind="props"
-                    @input="changeUpdateType($event)"/>
+            <template v-slot:frequency="props">
+                <form-field v-bind="props" @input="changeFrequency($event)"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -33,8 +29,8 @@
                         <div class="column is-3">
                             <fade>
                                 <a @click="field.value.push(reminderFactory())"
-                                    class="button is-small is-naked has-margin-top-medium is-pulled-right"
-                                    v-if="
+                                   class="button is-small is-naked has-margin-top-medium is-pulled-right"
+                                   v-if="
                                         field.value.length < 3
                                             && !field.value.some(({ scheduled_at }) => !scheduled_at)
                                     ">
@@ -77,7 +73,22 @@
             <template v-slot:calendar_id="{field,errors}">
                 <color-select :field="field" :errors="errors"/>
             </template>
+            <template v-slot:actions-right v-if="isEdit">
+                <div class="level-right">
+                    <div class="button is-success" @click="submit">
+                        <span>Update</span>
+                        <span class="icon">
+                            <fa icon="check"/>
+                        </span>
+                    </div>
+                </div>
+            </template>
         </enso-form>
+        <event-confirmation v-if="confirm"
+            :event="event"
+            @confirm="confirm($event); confirm = null;"
+            @cancel="confirm = null;"
+            @close="confirm = null;"/>
     </modal>
 </template>
 
@@ -91,6 +102,7 @@ import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
 import ColorSelect from './ColorSelect.vue';
+import EventConfirmation from './EventConfirmation.vue';
 
 library.add(faUserClock, faPlus, faMinus);
 
@@ -98,7 +110,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, ColorSelect,
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, ColorSelect, EventConfirmation,
     },
 
     inject: ['i18n', 'route'],
@@ -111,7 +123,8 @@ export default {
     },
 
     data: () => ({
-        timeFormat: 'H:i'
+        timeFormat: 'H:i',
+        confirm: null,
     }),
 
     computed: {
@@ -153,14 +166,39 @@ export default {
         time(dateTime) {
             return format(dateTime, 'H:i');
         },
-        changeUpdateType(updateType) {
-            if (updateType === this.enums.eventUpdateType.OnlyThisEvent) {
-                this.$refs.form.field('frequence').value = this.enums.eventFrequencies.Once;
-            }
-        },
-        changeFrequence(frequence) {
+        changeFrequency(frequency) {
             this.$refs.form.field('recurrence_ends_at')
-                .meta.hidden = frequence === this.enums.eventFrequencies.Once;
+                .meta.hidden = frequency === this.enums.eventFrequencies.Once;
+        },
+        submit($event, updateType) {
+            if (this.needConfirm(updateType)) {
+                this.confirm = updateType => this.submit($event, updateType);
+                return;
+            }
+            this.submitForm({ ...this.$refs.form.formData, updateType });
+        },
+        submitForm(params) {
+            axios.patch(
+                this.route('core.calendar.events.update', { event: this.event.id }),
+                params,
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.$emit('submit');
+            }).catch((error) => {
+                const { status, data } = error.response;
+
+                if (status === 422) {
+                    this.$refs.form.errors.set(data.errors);
+                    this.$nextTick(this.$refs.form.focusError);
+                    return;
+                }
+
+                this.$refs.form.errorHandler(error);
+            });
+        },
+        needConfirm(updateType) {
+            return this.isEdit && updateType === undefined
+                && this.enums.eventFrequencies.Once !== `${this.event.frequency}`;
         },
     },
 };

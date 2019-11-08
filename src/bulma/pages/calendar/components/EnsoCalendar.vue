@@ -51,7 +51,7 @@
             </template>
         </vue-cal>
         <event-confirmation v-if="confirm"
-            :is-parent="event.parent_id === null"
+            :event="event"
             @confirm="confirm($event); confirm = null; event = null"
             @cancel="fetch(); confirm = null; event = null"
             @close="confirm = null; event = null;"/>
@@ -150,17 +150,13 @@ export default {
                 return;
             }
 
-            const frequence = updateType === this.enums.eventUpdateTypes.OnlyThisEvent
-                ? this.enums.eventFrequencies.Once
-                : null; // TODO
-
             axios.patch(
                 this.route('core.calendar.events.update', { event: $event.id }),
-                    { end_time: this.timeFormat($event.end), updateType, frequence }
-                ).then(({ data }) => {
-                    this.$toastr.success(data.message);
-                    this.fetch();
-                }).catch(this.errorHandler);
+                { end_time: this.timeFormat($event.end), updateType },
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.fetch();
+            }).catch(this.errorHandler);
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -184,17 +180,14 @@ export default {
                 return;
             }
 
-            updateType = updateType || enums.eventUpdateType.OnlyThisEvent;
-
             axios.delete(
                 this.route('core.calendar.events.destroy', { event: $event.id }),
                 { params: { updateType } },
-            ).then(this.fetch)
-            .catch(this.errorHandler);
+            ).then(this.fetch).catch(this.errorHandler);
         },
         needsConfirmation(updateType) {
             return updateType === null
-                && `${this.event.frequence}` !== this.enums.eventFrequencies.Once;
+                && `${this.event.frequency}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1

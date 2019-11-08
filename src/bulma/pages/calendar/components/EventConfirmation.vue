@@ -18,7 +18,7 @@
                         {{ i18n(enums.eventUpdateType._get(enums.eventUpdateType.OnlyThisEvent)) }}
                     </label>
                 </div>
-                <div class="field">
+                <div class="field" v-if="!event.isLast">
                     <input class="is-checkradio"
                         v-model="type"
                         :id="enums.eventUpdateType.ThisAndFutureEvents"
@@ -30,7 +30,7 @@
                         {{ i18n(enums.eventUpdateType._get(enums.eventUpdateType.ThisAndFutureEvents)) }}
                     </label>
                 </div>
-                <div class="field" v-if="!isParent">
+                <div class="field" v-if="event.parentId">
                     <input class="is-checkradio"
                         v-model="type"
                         :id="enums.eventUpdateType.All"
@@ -85,14 +85,13 @@ export default {
     inject: ['errorHandler', 'route', 'i18n'],
 
     props: {
-        isParent: {
-            type: Boolean,
-            default: false,
+        event: {
+            type: Object,
         },
     },
 
     data: () => ({
-        type: null',
+        type: null,
     }),
 
     computed: {
