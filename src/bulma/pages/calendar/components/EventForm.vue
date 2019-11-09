@@ -19,12 +19,8 @@
                 <form-field v-bind="props"
                     @input="$refs.form.field('start_date').meta.max = $event;"/>
             </template>
-            <template v-slot:frequence="props">
-                <form-field v-bind="props" @input="changeFrequence($event)"/>
-            </template>
-            <template v-slot:update_type="props">
-                <form-field v-bind="props"
-                    @input="$refs.form.field('update_type').meta.hidden = $event === 1"/>
+            <template v-slot:frequency="props">
+                <form-field v-bind="props" @input="changeFrequency($event)"/>
             </template>
             <template v-slot:reminders="{ field }">
                 <div class="field">
@@ -33,10 +29,10 @@
                         <div class="column is-3">
                             <fade>
                                 <a @click="field.value.push(reminderFactory())"
-                                    class="button is-small is-naked has-margin-top-medium is-pulled-right"
-                                    v-if="
+                                   class="button is-small is-naked has-margin-top-medium is-pulled-right"
+                                   v-if="
                                         field.value.length < 3
-                                        && !field.value.some(({ scheduled_at }) => !scheduled_at)
+                                            && !field.value.some(({ scheduled_at }) => !scheduled_at)
                                     ">
                                     <span class="icon is-small">
                                         <fa icon="plus"/>
@@ -77,10 +73,22 @@
             <template v-slot:calendar_id="{field,errors}">
                 <color-select :field="field" :errors="errors"/>
             </template>
+            <template v-slot:actions-right v-if="isEdit">
+                <div class="level-right">
+                    <div class="button is-success" @click="submit">
+                        <span>Update</span>
+                        <span class="icon">
+                            <fa icon="check"/>
+                        </span>
+                    </div>
+                </div>
+            </template>
         </enso-form>
         <event-confirmation v-if="confirm"
-            @confirm="confirm($event); confirm=null"
-            @cancel="confirm=null"/>
+            :event="event"
+            @confirm="confirm($event); confirm = null;"
+            @cancel="confirm = null;"
+            @close="confirm = null;"/>
     </modal>
 </template>
 
@@ -93,8 +101,8 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';
 import format from '@enso-ui/ui/src/modules/plugins/date-fns/format';
-import EventConfirmation from './EventConfirmation.vue';
 import ColorSelect from './ColorSelect.vue';
+import EventConfirmation from './EventConfirmation.vue';
 
 library.add(faUserClock, faPlus, faMinus);
 
@@ -102,7 +110,7 @@ export default {
     name: 'EventForm',
 
     components: {
-        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, EventConfirmation, ColorSelect,
+        Modal, EnsoForm, FormField, EnsoDatepicker, Fade, ColorSelect, EventConfirmation,
     },
 
     inject: ['i18n', 'route'],
@@ -113,12 +121,14 @@ export default {
             required: true,
         },
     },
+
     data: () => ({
+        timeFormat: 'H:i',
         confirm: null,
-        timeFormat: 'H:i'
     }),
+
     computed: {
-        ...mapState(['meta']),
+        ...mapState(['meta', 'enums']),
         isEdit() {
             return this.event.id;
         },
@@ -151,15 +161,44 @@ export default {
                 .value.push(this.reminder());
         },
         date(date) {
-            return format(date, this.meta.dateFormat);
+            return format(date, 'Y-m-d');
         },
         time(dateTime) {
             return format(dateTime, 'H:i');
         },
-        changeFrequence(frequence) {
-            console.log('this.isEdit\t', this.isEdit);
-            this.$refs.form.field('recurrence_ends_at').meta.hidden = frequence === 1;
-            this.$refs.form.field('update_type').meta.hidden = !this.isEdit || frequence === 1;
+        changeFrequency(frequency) {
+            this.$refs.form.field('recurrence_ends_at')
+                .meta.hidden = frequency === this.enums.eventFrequencies.Once;
+        },
+        submit($event, updateType) {
+            if (this.needConfirm(updateType)) {
+                this.confirm = updateType => this.submit($event, updateType);
+                return;
+            }
+            this.submitForm({ ...this.$refs.form.formData, updateType });
+        },
+        submitForm(params) {
+            axios.patch(
+                this.route('core.calendar.events.update', { event: this.event.id }),
+                params,
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.$emit('submit');
+            }).catch((error) => {
+                const { status, data } = error.response;
+
+                if (status === 422) {
+                    this.$refs.form.errors.set(data.errors);
+                    this.$nextTick(this.$refs.form.focusError);
+                    return;
+                }
+
+                this.$refs.form.errorHandler(error);
+            });
+        },
+        needConfirm(updateType) {
+            return this.isEdit && updateType === undefined
+                && this.enums.eventFrequencies.Once !== `${this.event.frequency}`;
         },
     },
 };
