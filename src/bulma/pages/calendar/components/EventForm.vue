@@ -50,6 +50,8 @@
                                 <div class="column is-9 animated fadeIn">
                                     <p class="has-margin-bottom-small">
                                         <enso-datepicker v-model="reminder.scheduled_at"
+                                            format="Y-m-d H:i:s"
+                                            :alt-format="`${meta.dateFormat} H:i`"
                                             v-bind="field.meta"/>
                                     </p>
                                 </div>
