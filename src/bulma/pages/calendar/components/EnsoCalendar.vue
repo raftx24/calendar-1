@@ -3,7 +3,7 @@
         <vue-cal class="vuecal--green-theme"
             :time-from="7 * 60"
             :locale="lang"
-            :selected-date="selectedDate"
+            :selected-date="date"
             :events="events"
             show-all-day-events
             today-button
@@ -50,10 +50,11 @@
                 </div>
             </template>
         </vue-cal>
-
         <event-confirmation v-if="confirm"
-            @confirm="confirm($event); confirm=null"
-            @cancel="fetch(); confirm=null"/>
+            :event="event"
+            @confirm="confirm($event); confirm = null; event = null"
+            @cancel="fetch(); confirm = null; event = null"
+            @close="confirm = null; event = null;"/>
     </div>
 </template>
 
@@ -83,7 +84,7 @@ export default {
     inject: ['errorHandler', 'route', 'i18n'],
 
     props: {
-        selectedDate: {
+        date: {
             required: true,
         },
         calendars: {
@@ -100,13 +101,12 @@ export default {
     }),
 
     computed: {
-        ...mapState(['meta']),
+        ...mapState(['enums', 'meta']),
         ...mapGetters('preferences', ['lang']),
         params() {
             if (!this.interval) {
                 return { calendars: this.calendars };
             }
-
             if (this.interval.view === 'month') {
                 return {
                     calendars: this.calendars,
@@ -123,9 +123,7 @@ export default {
     },
 
     watch: {
-        calendars() {
-            this.fetch();
-        },
+        calendars: 'fetch',
     },
 
     mounted() {
@@ -133,7 +131,6 @@ export default {
 
         window.addEventListener('resize', this.resize);
     },
-
     beforeDestroy() {
         window.removeEventListener('resize', this.resize);
     },
@@ -152,20 +149,21 @@ export default {
         addEvent(event) {
             this.$emit('edit-event', event);
         },
-        update($event, updateType) {
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.patch(
-                    this.route('core.calendar.events.update', { event: $event.id }),
-                    { end_time: this.timeFormat($event.end), update_type: updateType },
-                ).then(({ data }) => {
-                    this.$toastr.success(data.message);
-                    this.fetch();
-                }).catch(this.errorHandler);
+        update($event, updateType = null) {
+            this.event = $event;
+
+            if (this.needsConfirmation(updateType)) {
+                this.confirm = updateType => this.update($event, updateType);
                 return;
             }
-            this.confirm = (updateType) => {
-                this.update($event, updateType);
-            };
+
+            axios.patch(
+                this.route('core.calendar.events.update', { event: $event.id }),
+                { end_time: this.timeFormat($event.end), updateType },
+            ).then(({ data }) => {
+                this.$toastr.success(data.message);
+                this.fetch();
+            }).catch(this.errorHandler);
         },
         updateInterval(interval) {
             this.interval = interval;
@@ -176,27 +174,27 @@ export default {
                 this.$router.push(event.route);
                 return;
             }
-
             if (!event.readonly) {
                 this.$emit('edit-event', event);
             }
-
             e.stopPropagation();
         },
-        destroy($event, updateType) {
-            if ($event.frequence === 1 || updateType !== undefined) {
-                axios.delete(
-                    this.route(
-                        'core.calendar.events.destroy',
-                        { event: $event.id, updateType: updateType || 'single' },
-                    ),
-                ).then(() => (this.fetch())).catch(this.errorHandler);
+        destroy($event, updateType = null) {
+            this.event = $event;
+
+            if (this.needsConfirmation(updateType)) {
+                this.confirm = updateType => this.destroy($event, updateType);
                 return;
             }
 
-            this.confirm = (updateType) => {
-                this.destroy($event, updateType);
-            };
+            axios.delete(
+                this.route('core.calendar.events.destroy', { event: $event.id }),
+                { params: { updateType } },
+            ).then(this.fetch).catch(this.errorHandler);
+        },
+        needsConfirmation(updateType) {
+            return updateType === null
+                && `${this.event.frequency}` !== this.enums.eventFrequencies.Once;
         },
         dateTimeFormat(daysCount, date) {
             return daysCount > 1
@@ -216,18 +214,14 @@ export default {
 <style lang="scss">
     .calendar-wrapper {
         height: 100%;
-
         .vuecal {
             border-radius: inherit;
-
             .vuecal__body {
                 overflow: auto;
-
                 .vuecal__bg {
                     overflow: visible;
                 }
             }
-
             .vuecal__cell:hover {
                 cursor: pointer;
             }
@@ -237,8 +231,6 @@ export default {
                 white-space: pre;
             }
         }
-
-
         .vuecal__event-resize-handle {
                 &:after {
                     top: 5px;
@@ -263,7 +255,6 @@ export default {
             }
         .vuecal__time-column {
             height: auto;
-
             .vuecal__time-cell .label {
                 color: inherit;
                 display: inherit;
