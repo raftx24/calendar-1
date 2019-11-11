@@ -11,7 +11,7 @@
                 <color-select
                     :field="field"
                     :errors="errors"
-                    color-field="name"/>
+                    color-field="id"/>
             </template>
         </enso-form>
     </modal>
