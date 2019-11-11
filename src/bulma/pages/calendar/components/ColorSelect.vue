@@ -6,11 +6,9 @@
         <vue-select v-model="field.value"
             v-bind="field.meta"
             v-on="$listeners"
-            @fetch="field.meta.options = $event; ready = true"
             :has-error="errors.has(field.name)"
             @input="errors.clear(field.name); $emit('changed')">
-            <template v-slot:selection="{selection,errors}"
-                v-if="ready">
+            <template v-slot:selection="{selection,errors}">
                 <div>
                     <span :class="`calendar-color calendar-${selection[colorField]}`"/>
                     <span>{{ selection.name }}</span>
