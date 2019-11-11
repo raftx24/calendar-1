@@ -6,11 +6,11 @@
         <vue-select v-model="field.value"
             v-bind="field.meta"
             v-on="$listeners"
-            @fetch="field.meta.options = $event; ready = true"
+            @fetch="field.meta.options = $event"
             :has-error="errors.has(field.name)"
             @input="errors.clear(field.name); $emit('changed')">
             <template v-slot:selection="{selection,errors}"
-                v-if="ready">
+                v-if="isFetched">
                 <div>
                     <span :class="`calendar-color calendar-${selection[colorField]}`"/>
                     <span>{{ selection.name }}</span>
@@ -68,6 +68,13 @@ export default {
         ready: false,
         confirm: null,
     }),
+    computed: {
+        isFetched(){
+            return this.field.meta.options &&
+                this.field.meta.options.length > 0;
+        },
+    },
+
 };
 </script>
 
