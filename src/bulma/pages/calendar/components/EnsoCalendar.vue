@@ -137,7 +137,7 @@ export default {
 
     methods: {
         resize() {
-            this.$el.style.height = `${document.body.clientHeight - 170}px`;
+            this.$el.style.height = `${document.documentElement.clientHeight - 170}px`;
         },
         fetch() {
             if (this.calendars) {
