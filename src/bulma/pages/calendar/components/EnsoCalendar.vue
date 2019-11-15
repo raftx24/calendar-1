@@ -202,7 +202,7 @@ export default {
                 : format(date, 'h:i');
         },
         dateFormat(date) {
-            return format(date, `${this.meta.dateFormat}`);
+            return format(date, 'Y-m-d');
         },
         timeFormat(dateTime) {
             return format(dateTime, 'H:i');
