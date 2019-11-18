@@ -72,6 +72,7 @@ import 'vue-cal/dist/i18n/fr.js';
 import 'vue-cal/dist/i18n/hu.js';
 import 'vue-cal/dist/i18n/nl.js';
 import 'vue-cal/dist/i18n/ro.js';
+
 import('../styles/colors.scss');
 
 library.add(faFlag, faArrowsAltH);
@@ -137,7 +138,7 @@ export default {
 
     methods: {
         resize() {
-            this.$el.style.height = `${document.documentElement.clientHeight - 170}px`;
+            this.$el.style.height = `${document.body.clientHeight - 170}px`;
         },
         fetch() {
             if (this.calendars) {
