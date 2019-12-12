@@ -72,6 +72,7 @@ import 'vue-cal/dist/i18n/fr.js';
 import 'vue-cal/dist/i18n/hu.js';
 import 'vue-cal/dist/i18n/nl.js';
 import 'vue-cal/dist/i18n/ro.js';
+import 'vue-cal/dist/i18n/es.js';
 
 import('../styles/colors.scss');
 
