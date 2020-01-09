@@ -26,7 +26,7 @@
     "@enso-ui/modal": "1.0.x",
     "@enso-ui/select": "1.1.x",
     "@enso-ui/transitions": "1.0.x",
-    "@enso-ui/ui": "2.2.x",
+    "@enso-ui/ui": "2.3.x",
     "@fortawesome/fontawesome-svg-core": "^1.2.2",
     "@fortawesome/free-solid-svg-icons": "^5.2.0",
     "v-tooltip": "^2.0.0-rc.32",
