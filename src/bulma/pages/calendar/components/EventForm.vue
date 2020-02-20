@@ -96,9 +96,9 @@
 
 <script>
 import { mapState } from 'vuex';
-import {
-    Modal, EnsoForm, FormField, EnsoDatepicker,
-} from '@enso-ui/bulma';
+import { EnsoForm, FormField } from '@enso-ui/forms/bulma';
+import { Modal } from '@enso-ui/modal/bulma';
+import { EnsoDatepicker } from '@enso-ui/datepicker/bulma';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faUserClock, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 import { Fade } from '@enso-ui/transitions';

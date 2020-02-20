@@ -19,7 +19,8 @@
 
 <script>
 import { mapState } from 'vuex';
-import { EnsoForm, Modal } from '@enso-ui/bulma';
+import { EnsoForm } from '@enso-ui/forms/bulma';
+import { Modal } from '@enso-ui/modal/bulma';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faMinus, faPlus, faUserClock } from '@fortawesome/free-solid-svg-icons';
 import ColorSelect from './ColorSelect.vue';
@@ -29,9 +30,7 @@ library.add(faUserClock, faPlus, faMinus);
 export default {
     name: 'CalendarForm',
 
-    components: {
-        Modal, EnsoForm, ColorSelect,
-    },
+    components: { Modal, EnsoForm, ColorSelect },
 
     inject: ['i18n', 'route'],
 
