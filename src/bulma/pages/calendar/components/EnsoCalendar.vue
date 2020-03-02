@@ -31,7 +31,7 @@
                     </span>
                 </a>
             </template>
-            <template v-slot:event-renderer="{ event, view }">
+            <template v-slot:event="{ event, view }">
                 <div>
                     <b class="has-text-centered">
                         {{ event.title }}
