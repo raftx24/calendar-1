@@ -16,6 +16,7 @@
             @event-mouse-leave="hovering = null"
             @event-delete="destroy"
             @event-duration-change="update"
+            @event-drop="update($event.event)"
             :on-event-dblclick="selectEvent"
             :on-event-create="addEvent"
             editable-events
@@ -159,9 +160,15 @@ export default {
                 return;
             }
 
+            const payload = {
+                start_time: this.timeFormat($event.start),
+                end_time: this.timeFormat($event.end),
+                updateType
+            };
+
             axios.patch(
                 this.route('core.calendar.events.update', { event: $event.id }),
-                { end_time: this.timeFormat($event.end), updateType },
+                payload,
             ).then(({ data }) => {
                 this.$toastr.success(data.message);
                 this.fetch();
