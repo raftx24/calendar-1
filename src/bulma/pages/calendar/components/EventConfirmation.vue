@@ -3,46 +3,8 @@
         v-on="$listeners">
         <div class="box">
             <h5 class="subtitle is-5">
-                {{ i18n("Choose change type for the recurring event") }}
+                {{ i18n("Update") }}
             </h5>
-            <div>
-                <div class="field">
-                    <input class="is-checkradio"
-                        v-model="type"
-                        :id="enums.eventUpdateType.OnlyThisEvent"
-                        type="radio"
-                        name="type"
-                        checked="checked"
-                        :value="enums.eventUpdateType.OnlyThisEvent">
-                    <label :for="enums.eventUpdateType.OnlyThisEvent">
-                        {{ i18n(enums.eventUpdateType._get(enums.eventUpdateType.OnlyThisEvent)) }}
-                    </label>
-                </div>
-                <div class="field" v-if="!event.isLast">
-                    <input class="is-checkradio"
-                        v-model="type"
-                        :id="enums.eventUpdateType.ThisAndFutureEvents"
-                        type="radio"
-                        name="type"
-                        checked="checked"
-                        :value="enums.eventUpdateType.ThisAndFutureEvents">
-                    <label :for="enums.eventUpdateType.ThisAndFutureEvents">
-                        {{ i18n(enums.eventUpdateType._get(enums.eventUpdateType.ThisAndFutureEvents)) }}
-                    </label>
-                </div>
-                <div class="field" v-if="event.parentId">
-                    <input class="is-checkradio"
-                        v-model="type"
-                        :id="enums.eventUpdateType.All"
-                        type="radio"
-                        name="type"
-                        checked="checked"
-                        :value="enums.eventUpdateType.All">
-                    <label :for="enums.eventUpdateType.All">
-                        {{ i18n(enums.eventUpdateType._get(enums.eventUpdateType.All)) }}
-                    </label>
-                </div>
-            </div>
             <hr>
             <div class="level">
                 <div class="level-left">
@@ -55,10 +17,19 @@
                 </div>
                 <div class="level-right">
                     <div class="level-item">
-                        <button class="button is-danger has-margin-left-small"
-                            :disabled="type === null"
-                            @click="$emit('confirm', type)">
-                            {{ i18n('Confirm') }}
+                        <button class="button is-success"
+                            @click="$emit('confirm', update.OnlyThis)">
+                            {{ i18n(update._get(update.OnlyThis)) }}
+                        </button>
+                        <button class="button is-warning has-margin-left-medium"
+                            @click="$emit('confirm', update.ThisAndFuture)"
+                            v-if="!event.isLast">
+                            {{ i18n(update._get(update.ThisAndFuture)) }}
+                        </button>
+                        <button class="button is-danger has-margin-left-medium"
+                            @click="$emit('confirm', update.All)"
+                            v-if="!event.parentId">
+                            {{ i18n(update._get(update.All)) }}
                         </button>
                     </div>
                 </div>
@@ -82,20 +53,20 @@ export default {
 
     components: { Modal },
 
-    inject: ['errorHandler', 'route', 'i18n'],
+    inject: ['i18n'],
 
     props: {
         event: {
             type: Object,
+            required: true,
         },
     },
 
-    data: () => ({
-        type: null,
-    }),
-
     computed: {
         ...mapState(['enums']),
+        update() {
+            return this.enums.eventUpdateType;
+        },
     },
 };
 </script>

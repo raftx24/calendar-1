@@ -40,20 +40,20 @@
                 </div>
             </div>
         </div>
-        <div class="level is-marginless" v-for="calendar in calendars" :key="calendar.id">
+        <div class="level is-marginless calendar-item"
+            v-for="calendar in calendars"
+            :key="calendar.id">
             <div class="level-left">
                 <div class="level-item">
-                    <input :class="['is-checkradio', `calendar-${calendar.color}`]"
-                        v-model="selected"
-                        type="checkbox"
-                        :id="`checkbox-${calendar.id}`"
-                        :key="`checkbox-${calendar.id}`"
-                        :name="`checkbox-${calendar.id}`"
-                        :value="calendar.id"
-                        @change="updateSelection">
-                    <label class="is-marginless"
-                        :for="`checkbox-${calendar.id}`">
-                        {{ calendar.name }}
+                    <label class="checkbox">
+                        <input class="is-hidden"
+                            v-model="selected"
+                            type="checkbox"
+                            :value="calendar.id"
+                            @change="updateSelection">
+                        <span class="calendar-color"
+                            :class="`calendar-${selected.includes(calendar.id) ? calendar.color : 'gray'}`"/>
+                            {{ calendar.name }}
                     </label>
                 </div>
             </div>
@@ -144,7 +144,12 @@ export default {
 </script>
 
 <style lang="scss">
-    .small-calendar{
+    .small-calendar {
         height: 290px;
+    }
+
+    .calendar-item .level-left {
+        flex-shrink: 1;
+        overflow: hidden;
     }
 </style>
