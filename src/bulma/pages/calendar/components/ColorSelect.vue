@@ -12,7 +12,7 @@
             <template v-slot:selection="{ selection, selectionBindings, selectionEvents }"
                 :selection-bindings="selectionBindings"
                 :selection-events="selectionEvents">
-                <div>
+                <div v-if="selection">
                     <span :class="`calendar-color calendar-${selection[colorField]}`"/>
                     <span>{{ selection.name }}</span>
                 </div>
