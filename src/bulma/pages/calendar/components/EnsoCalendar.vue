@@ -163,7 +163,7 @@ export default {
             const payload = {
                 start_time: this.timeFormat($event.start),
                 end_time: this.timeFormat($event.end),
-                updateType
+                updateType,
             };
 
             axios.patch(
