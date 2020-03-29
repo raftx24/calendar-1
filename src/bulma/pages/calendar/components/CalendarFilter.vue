@@ -9,6 +9,7 @@
             <vue-cal class="small-calendar is-paddingless"
                 xsmall
                 today-button
+                :locale="lang"
                 :time="false"
                 hide-view-selector
                 default-view="month"
@@ -75,6 +76,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import VueCal from 'vue-cal';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
@@ -102,6 +104,10 @@ export default {
 
     created() {
         this.fetch().then(this.selectAll);
+    },
+
+    computed: {
+        ...mapGetters('preferences', ['lang']),
     },
 
     methods: {
