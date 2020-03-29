@@ -5,22 +5,24 @@
             @close="calendar = null"
             @destroy="destroy"
             v-if="calendar"/>
-        <vue-cal class="small-calendar vuecal--green-theme has-margin-bottom-large"
-            xsmall
-            today-button
-            :time="false"
-            hide-view-selector
-            default-view="month"
-            :disable-views="['years', 'year', 'week', 'day']"
-            @cell-focus="$emit('change-date', $event)">
-            <template v-slot:today-button>
-                <span class="icon is-small is-clickable is-naked"
-                    @click="$emit('change-date', new Date())">
-                    <fa icon="crosshairs"
-                        size="xs"/>
-                </span>
-            </template>
-        </vue-cal>
+        <div class="box has-padding-small raises-on-hover">
+            <vue-cal class="small-calendar is-paddingless"
+                xsmall
+                today-button
+                :time="false"
+                hide-view-selector
+                default-view="month"
+                :disable-views="['years', 'year', 'week', 'day']"
+                @cell-focus="$emit('change-date', $event)">
+                <template v-slot:today-button>
+                    <span class="icon is-small is-clickable is-naked"
+                        @click="$emit('change-date', new Date())">
+                        <fa icon="crosshairs"
+                            size="xs"/>
+                    </span>
+                </template>
+            </vue-cal>
+        </div>
         <div class="level is-marginless">
             <div class="level-left">
                 <div class="level-item">

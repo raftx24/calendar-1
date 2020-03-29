@@ -1,7 +1,6 @@
 <template>
     <div class="calendar-wrapper box is-paddingless raises-on-hover">
-        <vue-cal class="vuecal--green-theme"
-            :time-from="7 * 60"
+        <vue-cal :time-from="7 * 60"
             :locale="lang"
             :selected-date="date"
             :events="events"
@@ -22,7 +21,7 @@
             editable-events
             v-on="$listeners">
             <template v-slot:today-button>
-                <a class="button is-primary is-small">
+                <a class="button is-small">
                     <span class="is-bold">
                         {{ i18n('Today') }}
                     </span>
