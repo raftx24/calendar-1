@@ -56,7 +56,7 @@
                             @change="updateSelection">
                         <span class="calendar-color"
                             :class="`calendar-${selected.includes(calendar.id) ? calendar.color : 'gray'}`"/>
-                            {{ calendar.name }}
+                            {{ i18n(calendar.name) }}
                     </label>
                 </div>
             </div>
@@ -140,7 +140,7 @@ export default {
         destroy() {
             this.fetch().then(() => {
                 const index = this.selected
-                    .findIndex(id => id === this.calendar.id);
+                    .findIndex((id) => id === this.calendar.id);
 
                 this.selected.splice(index, 1);
                 this.calendar = null;
