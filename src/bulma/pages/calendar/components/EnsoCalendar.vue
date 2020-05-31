@@ -53,8 +53,8 @@
         <event-confirmation v-if="confirm"
             :event="event"
             @confirm="confirm($event); confirm = null; event = null"
-            @cancel="fetch(); confirm = null; event = null"
-            @close="confirm = null; event = null;"/>
+            @cancel="cancelUpdate"
+            @close="cancelUpdate"/>
     </div>
 </template>
 
@@ -215,6 +215,11 @@ export default {
         timeFormat(dateTime) {
             return format(dateTime, 'H:i');
         },
+        cancelUpdate() {
+            this.fetch();
+            this.confirm = null;
+            this.event = null;
+        }
     },
 };
 </script>

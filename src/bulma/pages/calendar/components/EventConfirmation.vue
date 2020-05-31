@@ -28,7 +28,7 @@
                         </button>
                         <button class="button is-danger has-margin-left-medium"
                             @click="$emit('confirm', update.All)"
-                            v-if="!event.parentId">
+                            v-if="event.parentId">
                             {{ i18n(update._get(update.All)) }}
                         </button>
                     </div>
